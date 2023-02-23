@@ -1,0 +1,24 @@
+# Toy Raytracer
+with inspiration from the "Ray Tracing in One Weekend" book series by Peter Shirley  
+
+This project is a rust port with additional addons.  
+
+## Build Instructions
+This will build the demo scene
+```
+git clone https://github.com/canarado/rust-rt
+
+cd rust-rt
+
+cargo b -r
+
+// windows
+.\target\release\raytracer.exe > image.ppm
+
+// linux
+./target/release/raytracer > image.ppm
+```
+
+## Custom Scenes
+Until there is a gui to do so, or a configuration file, something alone those lines,
+you can add objects with materials into the scene in the code in the appropriate section in `main.rs`
