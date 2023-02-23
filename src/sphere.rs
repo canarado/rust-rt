@@ -1,14 +1,17 @@
-use crate::{vec3::{Point3, dot_product, Vec3}, hittable::{Hit, HitRecord}, ray::Ray};
+use std::rc::Rc;
+
+use crate::{vec3::{Point3, dot_product, Vec3}, hittable::{Hit, HitRecord}, ray::Ray, material::Scatter};
 
 pub struct Sphere {
     pub center: Point3,
-    pub radius: f64
+    pub radius: f64,
+    pub mat: Rc<dyn Scatter>
 }
 
 impl Sphere {
-    pub fn new(center: Point3, radius: f64) -> Sphere {
+    pub fn new(center: Point3, radius: f64, material: Rc<dyn Scatter>) -> Sphere {
         Sphere {
-            center, radius
+            center, radius, mat: material
         }
     }
 }
@@ -38,6 +41,7 @@ impl Hit for Sphere {
         let mut rec = HitRecord {
             t: root,
             p: r.at(root),
+            mat: self.mat.clone(),
             normal: Vec3::new(0.0, 0.0, 0.0),
             front_face: false
         };

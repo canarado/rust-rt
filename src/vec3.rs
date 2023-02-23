@@ -66,6 +66,16 @@ impl Vec3 {
             rng.gen_range(range.clone())
         )
     }
+
+    pub fn near_zero(self) -> bool {
+        const EPS: f64 = 1.0e-8;
+
+        self[0].abs() < EPS && self[1].abs() < EPS && self[2].abs() < EPS
+    }
+
+    pub fn reflect(self, other: Vec3) -> Vec3 {
+        reflect(self, other)
+    }
 }
 
 pub fn unit_vector(vec: Vec3) -> Vec3 {
@@ -94,6 +104,24 @@ pub fn random_in_unit_sphere(rng: &mut ThreadRng) -> Vec3 {
 
         return p
     }
+}
+
+pub fn random_unit_vector(rng: &mut ThreadRng) -> Vec3 {
+    unit_vector(random_in_unit_sphere(rng))
+}
+
+pub fn random_in_hemisphere(rng: &mut ThreadRng, normal: Vec3) -> Vec3 {
+    let in_unit_sphere = random_in_unit_sphere(rng);
+
+    if dot_product(in_unit_sphere, normal) > 0.0 {
+        return in_unit_sphere
+    } else {
+        return -in_unit_sphere
+    }
+}
+
+pub fn reflect(vec1: Vec3, vec2: Vec3) -> Vec3 {
+    vec1 - 2.0 * dot_product(vec1, vec2) * vec2
 }
 
 impl Neg for Vec3 {

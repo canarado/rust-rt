@@ -8,11 +8,14 @@ pub fn write_color_to_stdout(pixel_color: Color, samples_per_pixel: u64) {
     let mut g = pixel_color.1;
     let mut b = pixel_color.2;
 
-    let scale = 1.0 / samples_per_pixel as f64;
+    let scale: f64 = 1.0 / samples_per_pixel as f64;
 
-    r *= scale.sqrt();
-    g *= scale.sqrt();
-    b *= scale.sqrt();
+    // r = (r * scale);
+    // g = (g * scale);
+    // b = (b * scale);
+    r *= scale;
+    g *= scale;
+    b *= scale;
 
     println!("{} {} {}", (256.0 * clampf(r, 0.0, 0.999)) as u64, (256.0 * clampf(g, 0.0, 0.999)) as u64, (256.0 * clampf(b, 0.0, 0.999)) as u64)
 }
