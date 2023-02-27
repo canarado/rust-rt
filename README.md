@@ -1,5 +1,7 @@
 # Toy Raytracer
-with inspiration from the "Ray Tracing in One Weekend" book series by Peter Shirley  
+with inspiration from the "Ray Tracing in One Weekend" book series by Peter Shirley   
+
+This is a CPU based raytracer with some basic support for 3D models, and light based rendering methods  
 
 This project is a rust port with additional addons.  
 
@@ -22,3 +24,8 @@ cargo b -r
 ## Custom Scenes
 Until there is a gui to do so, or a configuration file, something alone those lines,
 you can add objects with materials into the scene in the code in the appropriate section in `main.rs`
+
+## TODO
+- optimize vector math with SIMD
+- add config file for custom scenes
+- add rayon for multiple threads rendering
