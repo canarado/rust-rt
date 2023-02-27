@@ -3,6 +3,8 @@ use crate::color::Color;
 use rand::rngs::ThreadRng;
 use rand::Rng;
 
+use std::simd::{f64x4, Simd};
+
 #[derive(Debug, Copy, Clone)]
 pub struct Vec3 {
     pub x: f64,
@@ -87,12 +89,32 @@ pub fn dot_product(v1: &Vec3, v2: &Vec3) -> f64 {
 }
 
 pub fn cross_product(v1: &Vec3, v2: &Vec3) -> Vec3 {
+    let x1: f64x4 = Simd::from_array([v1[1], v1[2], v1[0], 0.0]);
+    let y1: f64x4 = Simd::from_array([v2[2], v2[0], v2[1], 0.0]);
+
+    let z1 = x1 * y1;
+
+    let x2: f64x4 = Simd::from_array([v1[2], v1[0], v1[1], 0.0]);
+    let y2: f64x4 = Simd::from_array([v2[1], v2[2], v2[0], 0.0]);
+
+    let z2 = x2 * y2;
+
+    let w = z1 - z2;
+
     Vec3 {
-        x: v1[1] * v2[2] - v1[2] * v2[1],
-        y: v1[2] * v2[0] - v1[0] * v2[2],
-        z: v1[0] * v2[1] - v1[1] * v2[0]
+        x: w[0],
+        y: w[1],
+        z: w[2]
     }
 }
+
+// pub fn cross_product(v1: &Vec3, v2: &Vec3) -> Vec3 {
+//     Vec3 {
+//         x: v1[1] * v2[2] - v1[2] * v2[1],
+//         y: v1[2] * v2[0] - v1[0] * v2[2],
+//         z: v1[0] * v2[1] - v1[1] * v2[0]
+//     }
+// }
 
 pub fn random_in_unit_sphere(rng: &mut ThreadRng) -> Vec3 {
     loop {
@@ -193,25 +215,57 @@ impl IndexMut<u8> for Vec3 {
 
 impl AddAssign for Vec3 {
     fn add_assign(&mut self, other: Self) {
+        let x: f64x4 = Simd::from_array([self.x, self.y, self.z, 0.0]);
+        let y: f64x4 = Simd::from_array([other.x, other.y, other.z, 0.0]);
+
+        let z = x + y;
+
         *self = Self {
-            x: self.x + other.x,
-            y: self.y + other.y,
-            z: self.z + other.z
+            x: z[0],
+            y: z[1],
+            z: z[2]
         }
     }
 }
+
+// impl AddAssign for Vec3 {
+//     fn add_assign(&mut self, other: Self) {
+//         *self = Self {
+//             x: self.x + other.x,
+//             y: self.y + other.y,
+//             z: self.z + other.z
+//         }
+//     }
+// }
 
 impl Add<Vec3> for Vec3 {
     type Output = Vec3;
 
     fn add(self, other: Vec3) -> Self::Output {
+        let x: f64x4 = Simd::from_array([self.x, self.y, self.z, 0.0]);
+        let y: f64x4 = Simd::from_array([other.x, other.y, other.z, 0.0]);
+
+        let z = x + y;
+        
         Vec3 {
-            x: self.x + other.x,
-            y: self.y + other.y,
-            z: self.z + other.z
+            x: z[0],
+            y: z[1],
+            z: z[2]
         }
     }
 }
+
+// impl Add<Vec3> for Vec3 {
+//     type Output = Vec3;
+
+//     fn add(self, other: Vec3) -> Self::Output {
+//         Vec3 {
+//             x: self.x + other.x,
+//             y: self.y + other.y,
+//             z: self.z + other.z
+//         }
+//     }
+// }
 
 impl Add<&Vec3> for &Vec3 {
     type Output = Vec3;
@@ -318,13 +372,29 @@ impl Mul<Vec3> for Vec3 {
     type Output = Vec3;
 
     fn mul(self, other: Vec3) -> Self::Output {
+        let x: f64x4 = Simd::from_array([self.x, self.y, self.z, 0.0]);
+        let y: f64x4 = Simd::from_array([other.x, other.y, other.z, 0.0]);
+
+        let z = x * y;
+
         Vec3 {
-            x: self.x * other.x,
-            y: self.y * other.y,
-            z: self.z * other.z
+            x: z[0],
+            y: z[1],
+            z: z[2]
         }
     }
 }
+// impl Mul<Vec3> for Vec3 {
+//     type Output = Vec3;
+
+//     fn mul(self, other: Vec3) -> Self::Output {
+//         Vec3 {
+//             x: self.x * other.x,
+//             y: self.y * other.y,
+//             z: self.z * other.z
+//         }
+//     }
+// }
 
 impl Mul<&Vec3> for &Vec3 {
     type Output = Vec3;
