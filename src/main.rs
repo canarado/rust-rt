@@ -22,15 +22,26 @@ fn main() {
     const MAX_RECURSION_DEPTH: u64 = 50;
     
     // image configuration
-    const ASPECT_RATIO: f64 = 3.0 / 2.0;
-    const IMAGE_WIDTH: u64 = 1200;
+    const ASPECT_RATIO: f64 = 16.0 / 9.0;
+    const IMAGE_WIDTH: u64 = 600;
+    // const ASPECT_RATIO: f64 = 16.0 / 9.0;
+    // const IMAGE_WIDTH: u64 = 600;
     const IMAGE_HEIGHT: u64 = (IMAGE_WIDTH as f64 / ASPECT_RATIO) as u64;
-    const SAMPLES_PER_PIXEL: u64 = 500;
+    const SAMPLES_PER_PIXEL: u64 = 25;
     
     // RNG cache
     let mut rng = rand::thread_rng();
 
     let world = demo(&mut rng);
+    // let world = simple_test();
+
+    // let origin = Point3::new(1.0, 3.3, -3.0);
+    // let lookat = Point3::new(0.0, 0.0, 0.0);
+    // let vup = Vec3::new(0.0, 1.0, 0.0);
+    // let dist_to_focus = 1.0;
+    // let aperture = 0.3;
+
+    // let camera = OrthographicCamera::new(origin, lookat, vup, 45.0, ASPECT_RATIO, aperture, dist_to_focus);
 
     let origin = Point3::new(13.0, 2.0, 3.0);
     let lookat = Point3::new(0.0, 0.0, 0.0);
@@ -38,7 +49,7 @@ fn main() {
     let dist_to_focus = 10.0;
     let aperture = 0.1;
 
-    let camera = OrthographicCamera::new(origin, lookat, vup, 90.0, ASPECT_RATIO, aperture, dist_to_focus);
+    let camera = OrthographicCamera::new(origin, lookat, vup, 45.0, ASPECT_RATIO, aperture, dist_to_focus);
 
     // writes header for ppm file to stdout, use with > to pipe to ppm file
     write_ppm_header_to_stdout(IMAGE_WIDTH, IMAGE_HEIGHT);
@@ -89,8 +100,6 @@ fn ray_color(ray: Ray, world: &World, depth: u64, rng: &mut ThreadRng) -> Vec3 {
         } else {
             return Vec3::new(0.0, 0.0, 0.0)
         }
-        // let target = rec.p + random_in_hemisphere(rng, rec.normal);
-        // return 0.5 * ray_color(Ray::new(rec.p, target), world, depth - 1, rng);
     }
 
     let unit_direction = unit_vector(&ray.direction);
@@ -109,8 +118,8 @@ pub fn demo(rng: &mut ThreadRng) -> World {
 
     for a in 0..=22 {
         for b in 0..=22 {
-            let af = a as f64;
-            let bf = b as f64;
+            let af = a as f64 - 11.0;
+            let bf = b as f64 - 11.0;
 
             let c = rng.gen::<f64>();
             let center = Point3::new(af + 0.9 * rng.gen::<f64>(), 0.2, bf + 0.9 * rng.gen::<f64>());
@@ -153,6 +162,17 @@ pub fn demo(rng: &mut ThreadRng) -> World {
     world.push(
         Box::new(Sphere::new(Point3::new(4.0, 1.0, 0.0), 1.0, mat3))
     );
+
+    world
+}
+
+pub fn simple_test() -> World {
+    let mut world = World::new();
+
+    let mat = Rc::new(Lambertian::new(Vec3::new(0.5, 0.5, 0.5)));
+    let sphere = Box::new(Sphere::new(Point3::new(0.0, 0.0, 0.0), 1.0, mat));
+
+    world.push(sphere);
 
     world
 }

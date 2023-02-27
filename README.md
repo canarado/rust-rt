@@ -7,6 +7,13 @@ This project is a rust port with additional addons.
 
 ## Build Instructions
 This will build the demo scene
+
+Ensure you are on the nightly build, this is a prerequisite for SIMD instruction sets
+```
+rustup default nightly
+```
+
+Cloning, building, and running
 ```
 git clone https://github.com/canarado/rust-rt
 
