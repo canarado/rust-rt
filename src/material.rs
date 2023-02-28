@@ -1,7 +1,7 @@
 use crate::{ray::Ray, hittable::HitRecord, vec3::{random_in_unit_sphere, Vec3, unit_vector, refract, dot_product, reflect}};
 use rand::Rng;
 
-pub trait Scatter {
+pub trait Scatter: Sync+Send {
     fn scatter(&self, r: &Ray, rec: &HitRecord) -> Option<(Vec3, Ray)>;
 }
 

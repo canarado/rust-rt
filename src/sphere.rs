@@ -1,15 +1,15 @@
-use std::rc::Rc;
+use std::{sync::Arc};
 
 use crate::{vec3::{Point3, dot_product, Vec3}, hittable::{Hit, HitRecord}, ray::Ray, material::Scatter};
 
 pub struct Sphere {
     pub center: Point3,
     pub radius: f64,
-    pub mat: Rc<dyn Scatter>
+    pub mat: Arc<dyn Scatter>
 }
 
 impl Sphere {
-    pub fn new(center: Point3, radius: f64, material: Rc<dyn Scatter>) -> Sphere {
+    pub fn new(center: Point3, radius: f64, material: Arc<dyn Scatter>) -> Sphere {
         Sphere {
             center, radius, mat: material
         }

@@ -1,4 +1,5 @@
 #![feature(portable_simd)]
+#![feature(let_chains)]
 pub mod vec3;
 pub mod color;
 pub mod ray;
