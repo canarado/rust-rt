@@ -5,6 +5,8 @@ use rand::Rng;
 
 use std::simd::{f64x4, Simd};
 
+use std::iter::Sum;
+
 #[derive(Debug, Copy, Clone)]
 pub struct Vec3 {
     pub x: f64,
@@ -810,3 +812,9 @@ impl Div<f64> for &Vec3 {
 //         (1.0 / rhs) * self
 //     }
 // }
+
+impl Sum for Vec3 {
+    fn sum<I: Iterator<Item=Self>>(iter: I) -> Self {
+        iter.fold(Vec3::new(0.0, 0.0, 0.0), |a, b| a + b)
+    }
+}
