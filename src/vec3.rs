@@ -36,10 +36,10 @@ impl Vec3 {
     }
 
     pub fn length_squared(&self) -> f64 {
-        let mut x: f64x4 = Simd::from_array([self[0], self[1], self[2], 0.0]);
-        x *= x;
+        let x: f64x4 = Simd::from_array([self[0], self[1], self[2], 0.0]);
+        let y = x * x;
 
-        x[0] + x[1] + x[2]
+        y[0] + y[1] + y[2]
         //self[0] * self[0] + self[1] * self[1] + self[2] * self[2]
     }
 
@@ -765,17 +765,18 @@ impl Div<f64> for Vec3 {
     type Output = Vec3;
 
     fn div(self, rhs: f64) -> Self::Output {
-        let f = 1.0 / rhs;
-        let x: f64x4 = Simd::from_array([self.y, self.y, self.z, 0.0]);
-        let y: f64x4 = f64x4::splat(f);
+        self * (1.0 / rhs)
+        // let f = 1.0 / rhs;
+        // let x: f64x4 = Simd::from_array([self.y, self.y, self.z, 0.0]);
+        // let y: f64x4 = f64x4::splat(f);
 
-        let z = x / y;
+        // let z = x / y;
 
-        Vec3 {
-            x: z[0],
-            y: z[1],
-            z: z[2]
-        }
+        // Vec3 {
+        //     x: z[0],
+        //     y: z[1],
+        //     z: z[2]
+        // }
     }
 }
 
@@ -791,17 +792,7 @@ impl Div<f64> for &Vec3 {
     type Output = Vec3;
 
     fn div(self, rhs: f64) -> Self::Output {
-        let f = 1.0 / rhs;
-        let x: f64x4 = Simd::from_array([self.y, self.y, self.z, 0.0]);
-        let y: f64x4 = f64x4::splat(f);
-
-        let z = x / y;
-
-        Vec3 {
-            x: z[0],
-            y: z[1],
-            z: z[2]
-        }
+        self * (1.0 / rhs)
     }
 }
 

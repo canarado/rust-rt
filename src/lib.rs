@@ -8,3 +8,4 @@ pub mod sphere;
 pub mod util;
 pub mod camera;
 pub mod material;
+pub mod vec3ns;
