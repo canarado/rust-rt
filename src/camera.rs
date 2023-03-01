@@ -8,6 +8,9 @@ pub struct Camera {
     pub vertical: Vec3
 }
 
+unsafe impl Sync for Camera {}
+unsafe impl Send for Camera {}
+
 impl Camera {
     pub fn new(viewport_height: f64, viewport_width: f64, focal_length: f64, origin: Point3) -> Camera {
         let h = Vec3::new(viewport_width, 0.0, 0.0);
@@ -25,6 +28,7 @@ impl Camera {
     }
 }
 
+#[derive(Copy, Clone)]
 pub struct OrthographicCamera {
     pub origin: Point3,
     pub lower_left_corner: Point3,
@@ -33,6 +37,9 @@ pub struct OrthographicCamera {
     pub uvw: [Vec3; 3],
     pub lens_radius: f64
 }
+
+unsafe impl Sync for OrthographicCamera {}
+unsafe impl Send for OrthographicCamera {}
 
 impl OrthographicCamera {
     pub fn new(origin: Point3, lookat: Point3, vup: Vec3, vfov: f64, aspect_ratio: f64, aperture: f64, focus_dist: f64) -> OrthographicCamera {

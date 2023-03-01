@@ -24,6 +24,7 @@ pub fn write_ppm_header_to_stdout(image_width: u64, image_height: u64) {
     println!("P3\n{} {}\n255", image_width, image_height);
 }
 
+// samples_per_pixel: f64
 pub fn write_color_to_list(vector: &mut Vec<String>, pixel_color: Color, samples_per_pixel: u64) {
     let mut r = pixel_color.0;
     let mut g = pixel_color.1;
