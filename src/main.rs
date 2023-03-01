@@ -11,11 +11,6 @@ use raytracer::{
     sphere::Sphere, camera::{OrthographicCamera}, material::{Lambertian, Metal, Dielectric}
 };
 
-// use raytracer::{
-//     vec3,
-//     vec3ns
-// };
-
 use rand::Rng;
 use rand::rngs::ThreadRng;
 
@@ -23,22 +18,9 @@ use indicatif::ParallelProgressIterator;
 
 use rayon::prelude::*;
 
-// fn main() {
-//     // wxyz
-//     let w = vec3::Vec3::new(2.0, 2.0, 2.0);
-//     let x = vec3::Vec3::new(2.0, 2.0, 2.0);
-//     let y = vec3ns::Vec3ns::new(2.0, 2.0, 2.0);
-//     let z = vec3ns::Vec3ns::new(2.0, 2.0, 2.0);
-
-//     let f = 2.0;
-
-//     println!("simd {:?}", w / f);
-//     println!("not simd {:?}", y / f);
-// }
-
 fn main() {
 
-    rayon::ThreadPoolBuilder::new().num_threads(5).build_global().unwrap();
+    rayon::ThreadPoolBuilder::new().num_threads(7).build_global().unwrap();
     
     let start = Instant::now();
     // Program config
@@ -46,14 +28,11 @@ fn main() {
     
     // image configuration
     const ASPECT_RATIO: f64 = 16.0 / 9.0;
-    const IMAGE_WIDTH: u64 = 1280;
+    const IMAGE_WIDTH: u64 = 1920;
     const IMAGE_HEIGHT: u64 = (IMAGE_WIDTH as f64 / ASPECT_RATIO) as u64;
-    const SAMPLES_PER_PIXEL: u64 = 200;
-    
-    // RNG cache
-    let mut rng = rand::thread_rng();
+    const SAMPLES_PER_PIXEL: u64 = 250;
 
-    let world = demo(&mut rng);
+    let world = demo();
 
     let origin = Point3::new(13.0, 2.0, 3.0);
     let lookat = Point3::new(0.0, 0.0, 0.0);
@@ -127,7 +106,8 @@ fn ray_color(ray: Ray, world: &World, depth: u64, rng: &mut ThreadRng) -> Vec3 {
     (1.0 - t) * Vec3::new(1.0, 1.0, 1.0) + t * Vec3::new(0.5, 0.7, 1.0)
 }
 
-pub fn demo(rng: &mut ThreadRng) -> World {
+pub fn demo() -> World {
+    let rng = &mut rand::thread_rng();
     let mut world = World::new();
 
     let ground_mat = Arc::new(Lambertian::new(Vec3::new(0.5, 0.5, 0.5)));
@@ -143,25 +123,25 @@ pub fn demo(rng: &mut ThreadRng) -> World {
             let center = Point3::new(af + 0.9 * rng.gen::<f64>(), 0.2, bf + 0.9 * rng.gen::<f64>());
 
             if (center - Point3::new(4.0, 0.2, 0.0)).length() > 0.9 {
-                if c < 0.8 {
+                if c < 0.45 {
                     let albedo = Vec3::random(rng) * Vec3::random(rng);
                     let mat = Arc::new(Lambertian::new(albedo));
                     let obj = Box::new(Sphere::new(center, 0.2, mat));
 
                     world.push(obj);
+                } else if c < 0.75 {
+                    let albedo = Vec3::random_in_range(rng, 0.5..=1.0);
+                    let fuzz = rng.gen_range(0.0..=0.5);
+                    let mat = Arc::new(Metal::new(albedo, fuzz));
+                    let obj = Box::new(Sphere::new(center, 0.2, mat));
+
+                    world.push(obj);
+                } else {
+                    let mat = Arc::new(Dielectric::new(1.5));
+                    let obj = Box::new(Sphere::new(center, 0.2, mat));
+
+                    world.push(obj);
                 }
-            } else if c < 0.95 {
-                let albedo = Vec3::random_in_range(rng, 0.5..=1.0);
-                let fuzz = rng.gen_range(0.0..=0.5);
-                let mat = Arc::new(Metal::new(albedo, fuzz));
-                let obj = Box::new(Sphere::new(center, 0.2, mat));
-
-                world.push(obj);
-            } else {
-                let mat = Arc::new(Dielectric::new(1.5));
-                let obj = Box::new(Sphere::new(center, 0.2, mat));
-
-                world.push(obj);
             }
         }
     }
