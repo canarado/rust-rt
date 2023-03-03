@@ -37,9 +37,9 @@ impl Vec3 {
 
     pub fn length_squared(&self) -> f64 {
         let x: f64x4 = Simd::from_array([self[0], self[1], self[2], 0.0]);
-        let y = x * x;
+        let y = &x * &x;
 
-        y[0] + y[1] + y[2]
+        &y[0] + &y[1] + &y[2]
         //self[0] * self[0] + self[1] * self[1] + self[2] * self[2]
     }
 
@@ -94,8 +94,8 @@ pub fn dot_product(v1: &Vec3, v2: &Vec3) -> f64 {
     let x: f64x4 = Simd::from_array([v1[0], v1[1], v1[2], 0.0]);
     let y: f64x4 = Simd::from_array([v2[0], v2[1], v2[2], 0.0]);
 
-    let z = x * y;
-    z[0] + z[1] + z[2]
+    let z = &x * &y;
+    &z[0] + &z[1] + &z[2]
     // v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2]
 }
 

@@ -12,3 +12,7 @@ rayon="1.5"
 [dependencies.indicatif]
 version="0.17.3"
 features=["rayon"]
+
+# uncomment for profiling/debug
+# [profile.release]
+# debug = 1

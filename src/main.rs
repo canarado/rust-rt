@@ -20,7 +20,7 @@ use rayon::prelude::*;
 
 fn main() {
 
-    rayon::ThreadPoolBuilder::new().num_threads(7).build_global().unwrap();
+    rayon::ThreadPoolBuilder::new().num_threads(12).build_global().unwrap();
     
     let start = Instant::now();
     // Program config
@@ -92,7 +92,7 @@ fn ray_color(ray: Ray, world: &World, depth: u64, rng: &mut ThreadRng) -> Vec3 {
     }
 
     // 0.1e-325
-    if let Some(rec) = world.hit(ray, 0.001, f64::INFINITY) {
+    if let Some(rec) = world.hit(&ray, 0.001, f64::INFINITY) {
         if let Some((attenuation, scattered)) = rec.mat.scatter(&ray, &rec) {
             return attenuation * ray_color(scattered, world, depth - 1, rng)
         } else {

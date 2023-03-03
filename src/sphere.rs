@@ -17,14 +17,18 @@ impl Sphere {
 }
 
 impl Hit for Sphere {
-    fn hit(&self, r: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let oc = r.origin - self.center;
         let a = r.direction.length_squared();
         let half_b = dot_product(&oc, &r.direction);
         let c = oc.length_squared() - self.radius*self.radius;
 
-        let discriminant = half_b*half_b - a*c;
-        if discriminant < 0.0 {
+        let fd = &half_b*&half_b;
+        let sd = &a * &c;
+        let discriminant = &fd - &sd;
+
+        //let discriminant = half_b*half_b - a*c;
+        if &discriminant < &0.0 {
             return None;
         }
 
@@ -47,7 +51,7 @@ impl Hit for Sphere {
         };
 
         let outward_normal = (rec.p - self.center) / self.radius;
-        rec.set_face_normal(r, outward_normal);
+        rec.set_face_normal(r, &outward_normal);
 
         Some(rec)
     }
