@@ -41,9 +41,9 @@ pub fn write_color_to_list(vector: &mut Vec<String>, pixel_color: Color, samples
     vector.push(cstr);
 }
 
-pub fn apply_samples(list: &mut Vec<f64>, samples_per_pixel: u64) -> Vec<u8> {
+pub fn apply_samples(list: &mut Vec<f64>, samples_per_pixel: u64, height: u32, width: u32) -> Vec<u8> {
 
-    let mut res: Vec<u8> = vec![];
+    let mut res: Vec<u8> = Vec::with_capacity((height * width * 3).try_into().unwrap());
 
     for c in list.chunks(3) {
         let mut r = c[0];

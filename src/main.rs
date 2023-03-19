@@ -92,7 +92,7 @@ fn main() {
             }).collect::<Vec<f64>>()
         }).collect::<Vec<f64>>();
 
-    let sampled = apply_samples(&mut list, SAMPLES_PER_PIXEL);
+    let sampled = apply_samples(&mut list, SAMPLES_PER_PIXEL, IMAGE_HEIGHT, IMAGE_WIDTH);
 
     writer.write_image_data(&sampled).unwrap();
 

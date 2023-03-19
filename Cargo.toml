@@ -15,5 +15,5 @@ version="0.17.3"
 features=["rayon"]
 
 # uncomment/comment to enable/disable debug symbols
-[profile.release]
-debug = 1
+# [profile.release]
+# debug = 1
