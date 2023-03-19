@@ -33,6 +33,6 @@ Until there is a gui to do so, or a configuration file, something alone those li
 you can add objects with materials into the scene in the code in the appropriate section in `main.rs`
 
 ## TODO
-- optimize vector math with SIMD
-- add config file for custom scenes
-- add rayon for multiple threads rendering
+[x] optimize vector math with SIMD
+[-] add config file for custom scenes
+[x] add rayon for multiple threads rendering
