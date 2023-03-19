@@ -45,3 +45,4 @@ you can add objects with materials into the scene in the code in the appropriate
 - [ ] GPU based rendering
 - [ ] GUI preview + object config
 - [ ] update functions to use one thread_rng per thread instead of random ones thrown about
+- [ ] modularize code and move vital functions out of main

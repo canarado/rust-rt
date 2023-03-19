@@ -1,3 +1,5 @@
+use rand::Rng;
+
 use crate::{vec3::{Point3, Vec3, unit_vector, cross_product, random_in_unit_disk}, ray::Ray};
 
 #[derive(Copy, Clone)]
@@ -5,26 +7,33 @@ pub struct Camera {
     pub origin: Point3,
     pub lower_left_corner: Point3,
     pub horizontal: Vec3,
-    pub vertical: Vec3
+    pub vertical: Vec3,
+    pub time0: f64,
+    pub time1: f64
 }
 
 unsafe impl Sync for Camera {}
 unsafe impl Send for Camera {}
 
 impl Camera {
-    pub fn new(viewport_height: f64, viewport_width: f64, focal_length: f64, origin: Point3) -> Camera {
+    pub fn new(viewport_height: f64, viewport_width: f64, focal_length: f64, origin: Point3, time0: f64, time1: f64) -> Camera {
         let h = Vec3::new(viewport_width, 0.0, 0.0);
         let v = Vec3::new(0.0, viewport_height, 0.0);
         Camera {
             origin,
             horizontal: h,
             vertical: v,
-            lower_left_corner: origin - h / 2.0 - v / 2.0 - Vec3::new(0.0, 0.0, focal_length)
+            lower_left_corner: origin - h / 2.0 - v / 2.0 - Vec3::new(0.0, 0.0, focal_length),
+            time0,
+            time1
         }
     }
 
     pub fn get_ray(self, u: f64, v: f64) -> Ray {
-        Ray::new(self.origin, self.lower_left_corner + u * self.horizontal + v * self.vertical - self.origin)
+
+        let mut rng = rand::thread_rng();
+
+        Ray::new(self.origin, self.lower_left_corner + u * self.horizontal + v * self.vertical - self.origin, rng.gen_range(self.time0..=self.time1))
     }
 }
 
@@ -35,14 +44,16 @@ pub struct OrthographicCamera {
     pub horizontal: Vec3,
     pub vertical: Vec3,
     pub uvw: [Vec3; 3],
-    pub lens_radius: f64
+    pub lens_radius: f64,
+    pub time0: f64,
+    pub time1: f64
 }
 
 unsafe impl Sync for OrthographicCamera {}
 unsafe impl Send for OrthographicCamera {}
 
 impl OrthographicCamera {
-    pub fn new(origin: Point3, lookat: Point3, vup: Vec3, vfov: f64, aspect_ratio: f64, aperture: f64, focus_dist: f64) -> OrthographicCamera {
+    pub fn new(origin: Point3, lookat: Point3, vup: Vec3, vfov: f64, aspect_ratio: f64, aperture: f64, focus_dist: f64, time0: f64, time1: f64) -> OrthographicCamera {
         let theta = vfov.to_radians();
         let h = (theta / 2.0).tan();
         let v_height = 2.0 * h;
@@ -58,14 +69,17 @@ impl OrthographicCamera {
         let lens_radius = aperture / 2.0;
 
         OrthographicCamera {
-            origin: origin, lower_left_corner, horizontal, vertical, uvw: [u, v, w], lens_radius
+            origin: origin, lower_left_corner, horizontal, vertical, uvw: [u, v, w], lens_radius, time1, time0
         }
     }
 
     pub fn get_ray(&self, s: f64, t: f64) -> Ray {
-        let rd = self.lens_radius * random_in_unit_disk(&mut rand::thread_rng());
+
+        let mut rng = rand::thread_rng();
+
+        let rd = self.lens_radius * random_in_unit_disk(&mut rng);
         let offset = self.uvw[0] * rd.x + self.uvw[1] * rd.y;
 
-        Ray::new(self.origin + offset, self.lower_left_corner + s * self.horizontal + t * self.vertical - self.origin - offset)
+        Ray::new(self.origin + offset, self.lower_left_corner + s * self.horizontal + t * self.vertical - self.origin - offset, rng.gen_range(self.time0..=self.time1))
     }
 }

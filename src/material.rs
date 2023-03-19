@@ -18,14 +18,14 @@ impl Lambertian {
 }
 
 impl Scatter for Lambertian {
-    fn scatter(&self, _r: &Ray, rec: &HitRecord) -> Option<(Vec3, Ray)> {
+    fn scatter(&self, r: &Ray, rec: &HitRecord) -> Option<(Vec3, Ray)> {
         let mut scatter_direction = rec.normal + random_in_unit_sphere(&mut rand::thread_rng()).normalized();
 
         if scatter_direction.near_zero() {
             scatter_direction = rec.normal;
         }
 
-        let scattered = Ray::new(rec.p, scatter_direction);
+        let scattered = Ray::new(rec.p, scatter_direction, r.time);
 
         Some((self.albedo, scattered))
     }
@@ -47,7 +47,7 @@ impl Metal {
 impl Scatter for Metal {
     fn scatter(&self, r: &Ray, rec: &HitRecord) -> Option<(Vec3, Ray)> {
         let reflected = r.direction.reflect(&rec.normal).normalized();
-        let scattered = Ray::new(rec.p, reflected + self.fuzz * random_in_unit_sphere(&mut rand::thread_rng()));
+        let scattered = Ray::new(rec.p, reflected + self.fuzz * random_in_unit_sphere(&mut rand::thread_rng()), r.time);
 
         if scattered.direction.dot_product(&rec.normal) > 0.0 {
             Some((self.albedo, scattered))
@@ -99,7 +99,7 @@ impl Scatter for Dielectric {
         }
 
         Some(
-            (attenuation, Ray::new(rec.p, direction))
+            (attenuation, Ray::new(rec.p, direction, r.time))
         )
     }
 }

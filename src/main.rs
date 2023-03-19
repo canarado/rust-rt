@@ -8,7 +8,7 @@ use raytracer::{
     color::*,
     ray::*,
     hittable::*,
-    sphere::Sphere, camera::{OrthographicCamera}, material::{Lambertian, Metal, Dielectric}
+    sphere::{Sphere, MovingSphere}, camera::{OrthographicCamera}, material::{Lambertian, Metal, Dielectric}
 };
 
 use rand::Rng;
@@ -20,7 +20,7 @@ use rayon::prelude::*;
 use png;
 
 fn main() {
-    
+
     rayon::ThreadPoolBuilder::new().num_threads(12).build_global().unwrap();
     
     let start = Instant::now();
@@ -31,7 +31,7 @@ fn main() {
     const ASPECT_RATIO: f64 = 16.0 / 9.0;
     const IMAGE_WIDTH: u32 = 1280;
     const IMAGE_HEIGHT: u32 = (IMAGE_WIDTH as f64 / ASPECT_RATIO) as u32;
-    const SAMPLES_PER_PIXEL: u64 = 250;
+    const SAMPLES_PER_PIXEL: u64 = 100;
 
     let world = demo();
 
@@ -41,7 +41,7 @@ fn main() {
     let dist_to_focus = 10.0;
     let aperture = 0.1;
 
-    let camera = OrthographicCamera::new(origin, lookat, vup, 45.0, ASPECT_RATIO, aperture, dist_to_focus);
+    let camera = OrthographicCamera::new(origin, lookat, vup, 45.0, ASPECT_RATIO, aperture, dist_to_focus, 0.0, 1.0);
 
     // writes header for ppm file to stdout, use with > to pipe to ppm file
     // write_ppm_header_to_stdout(IMAGE_WIDTH, IMAGE_HEIGHT);
@@ -96,14 +96,6 @@ fn main() {
 
     writer.write_image_data(&sampled).unwrap();
 
-    // let mut cv: Vec<String> = Vec::new();
-
-    // for c in list.chunks(3) {
-    //     write_color_to_list(&mut cv, Vec3::new(c[0], c[1], c[2]).as_color(), SAMPLES_PER_PIXEL);
-    // }
-    
-    // write_vector_to_stdout(&mut cv);
-
     eprintln!("Render Time: {:.2?}", start.elapsed());
 }
 
@@ -148,7 +140,9 @@ pub fn demo() -> World {
                 if c < 0.45 {
                     let albedo = Vec3::random(rng) * Vec3::random(rng);
                     let mat = Arc::new(Lambertian::new(albedo));
-                    let obj = Box::new(Sphere::new(center, 0.2, mat));
+                    let center2 = center + Vec3::new(0.0, rng.gen_range(0.0..=0.5), 0.0);
+
+                    let obj = Box::new(MovingSphere::new(center, center2, 0.2, mat, 0.0, 1.0));
 
                     world.push(obj);
                 } else if c < 0.75 {
