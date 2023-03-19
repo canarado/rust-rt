@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 rand="*"
 rayon="1.5"
+png = "0.17.7"
 
 [dependencies.indicatif]
 version="0.17.3"

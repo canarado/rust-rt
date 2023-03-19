@@ -41,6 +41,29 @@ pub fn write_color_to_list(vector: &mut Vec<String>, pixel_color: Color, samples
     vector.push(cstr);
 }
 
+pub fn apply_samples(list: &mut Vec<f64>, samples_per_pixel: u64) -> Vec<u8> {
+
+    let mut res: Vec<u8> = vec![];
+
+    for c in list.chunks(3) {
+        let mut r = c[0];
+        let mut g = c[1];
+        let mut b = c[2];
+
+        let scale: f64 = 1.0 / samples_per_pixel as f64;
+
+        r *= scale;
+        g *= scale;
+        b *= scale;
+
+        res.push((256.0 * clampf(r, 0.0, 0.999)) as u8);
+        res.push((256.0 * clampf(g, 0.0, 0.999)) as u8);
+        res.push((256.0 * clampf(b, 0.0, 0.999)) as u8);
+    }
+
+    res
+}
+
 pub fn write_vector_to_stdout(vector: &mut Vec<String>) {
     print!("{}", vector.join("\n"))
 }

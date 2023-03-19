@@ -22,10 +22,10 @@ cd rust-rt
 cargo b -r
 
 // windows
-.\target\release\raytracer.exe > image.ppm
+.\target\release\raytracer.exe
 
 // linux
-./target/release/raytracer > image.ppm
+./target/release/raytracer
 ```
 
 ## Custom Scenes
@@ -36,10 +36,12 @@ you can add objects with materials into the scene in the code in the appropriate
 - [x] optimize vector math with SIMD
 - [ ] add config file for custom scenes
 - [x] add rayon for multiple threads rendering
-- [ ] output to png instead of ppm
+- [x] output to png instead of ppm
 - [ ] add program flags
     - [ ] output file name
     - [ ] file size
     - [ ] core count
+    - [ ] sample rate
 - [ ] GPU based rendering
 - [ ] GUI preview + object config
+- [ ] update functions to use one thread_rng per thread instead of random ones thrown about

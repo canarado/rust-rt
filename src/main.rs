@@ -1,7 +1,7 @@
 #![feature(let_chains)]
 #![allow(unused_doc_comments)]
 
-use std::{time::Instant, sync::Arc};
+use std::{time::Instant, sync::Arc, fs::File, io::BufWriter, path::Path};
 
 use raytracer::{
     vec3::*,
@@ -17,9 +17,10 @@ use rand::rngs::ThreadRng;
 use indicatif::ParallelProgressIterator;
 
 use rayon::prelude::*;
+use png;
 
 fn main() {
-
+    
     rayon::ThreadPoolBuilder::new().num_threads(12).build_global().unwrap();
     
     let start = Instant::now();
@@ -28,8 +29,8 @@ fn main() {
     
     // image configuration
     const ASPECT_RATIO: f64 = 16.0 / 9.0;
-    const IMAGE_WIDTH: u64 = 1920;
-    const IMAGE_HEIGHT: u64 = (IMAGE_WIDTH as f64 / ASPECT_RATIO) as u64;
+    const IMAGE_WIDTH: u32 = 1280;
+    const IMAGE_HEIGHT: u32 = (IMAGE_WIDTH as f64 / ASPECT_RATIO) as u32;
     const SAMPLES_PER_PIXEL: u64 = 250;
 
     let world = demo();
@@ -43,7 +44,24 @@ fn main() {
     let camera = OrthographicCamera::new(origin, lookat, vup, 45.0, ASPECT_RATIO, aperture, dist_to_focus);
 
     // writes header for ppm file to stdout, use with > to pipe to ppm file
-    write_ppm_header_to_stdout(IMAGE_WIDTH, IMAGE_HEIGHT);
+    // write_ppm_header_to_stdout(IMAGE_WIDTH, IMAGE_HEIGHT);
+
+    // PNG setup
+    let output_file_path = Path::new(r"C:\Users\canny-dev\Documents\rust-rt\test.png");
+    let file = File::create(output_file_path).unwrap();
+    let ref mut w = BufWriter::new(file);
+
+    let mut encoder = png::Encoder::new(w, IMAGE_WIDTH, IMAGE_HEIGHT);
+    encoder.set_color(png::ColorType::Rgb);
+    encoder.set_depth(png::BitDepth::Eight);
+    encoder.set_source_gamma(png::ScaledFloat::from_scaled(IMAGE_HEIGHT / IMAGE_WIDTH * 100000));
+    encoder.set_source_chromaticities(png::SourceChromaticities::new(
+        (0.31270, 0.32900),
+        (0.64000, 0.33000),
+        (0.30000, 0.60000),
+        (0.15000, 0.06000)
+    ));
+    let mut writer = encoder.write_header().unwrap();
 
     /**
      * image should be a vector of <color1.0, color1.1, color1.2, color.0, ...>
@@ -57,8 +75,8 @@ fn main() {
      * take the 1d vector and chunk(3), write formatted {} {} {}, Color; to a list, print list to stdout
      */
 
-    let list =
-        (0..IMAGE_HEIGHT).rev().collect::<Vec<u64>>().into_par_iter().progress_count(IMAGE_HEIGHT).flat_map(|j| {
+    let mut list =
+        (0..IMAGE_HEIGHT).rev().collect::<Vec<u32>>().into_par_iter().progress_count(IMAGE_HEIGHT as u64).flat_map(|j| {
             (0..IMAGE_WIDTH).flat_map(|i| {
                 let mut rng = rand::thread_rng();
                 let mut pixel_color = Vec3::new(0.0, 0.0, 0.0);
@@ -74,13 +92,17 @@ fn main() {
             }).collect::<Vec<f64>>()
         }).collect::<Vec<f64>>();
 
-    let mut cv: Vec<String> = Vec::new();
+    let sampled = apply_samples(&mut list, SAMPLES_PER_PIXEL);
 
-    for c in list.chunks(3) {
-        write_color_to_list(&mut cv, Vec3::new(c[0], c[1], c[2]).as_color(), SAMPLES_PER_PIXEL);
-    }
+    writer.write_image_data(&sampled).unwrap();
+
+    // let mut cv: Vec<String> = Vec::new();
+
+    // for c in list.chunks(3) {
+    //     write_color_to_list(&mut cv, Vec3::new(c[0], c[1], c[2]).as_color(), SAMPLES_PER_PIXEL);
+    // }
     
-    write_vector_to_stdout(&mut cv);
+    // write_vector_to_stdout(&mut cv);
 
     eprintln!("Render Time: {:.2?}", start.elapsed());
 }
