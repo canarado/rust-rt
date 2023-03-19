@@ -27,7 +27,14 @@ struct Args {
 
     /// number of samples per pixel
     #[arg(short, default_value_t = 100)]
-    samples: u16
+    samples: u16,
+
+    #[arg(short, default_value_t = 1280, value_name = "width")]
+    image_width: u32,
+
+    #[arg(short, default_value_t = 720, value_name = "height")]
+    image_height: u32,
+
 
 }
 
@@ -42,10 +49,10 @@ fn main() {
     const MAX_RECURSION_DEPTH: u64 = 50;
     
     // image configuration
-    const ASPECT_RATIO: f64 = 16.0 / 9.0;
-    const IMAGE_WIDTH: u32 = 1280;
-    const IMAGE_HEIGHT: u32 = (IMAGE_WIDTH as f64 / ASPECT_RATIO) as u32;
+    let IMAGE_WIDTH: u32 = args.image_width.into();
+    let IMAGE_HEIGHT: u32 = args.image_height.into();
     let SAMPLES_PER_PIXEL: u64 = args.samples.into();
+    let ASPECT_RATIO: f64 = IMAGE_WIDTH as f64 / IMAGE_HEIGHT as f64;
 
     let world = demo();
 
