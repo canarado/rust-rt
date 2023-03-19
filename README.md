@@ -38,8 +38,8 @@ you can add objects with materials into the scene in the code in the appropriate
 - [x] add rayon for multiple threads rendering
 - [x] output to png instead of ppm
 - [ ] add program flags
-    - [ ] output file name
-    - [ ] file size
+    - [ ] output file name and directory
+    - [x] image dimensions
     - [x] core count
     - [x] sample rate
 - [ ] GPU based rendering
