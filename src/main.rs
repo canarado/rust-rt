@@ -1,5 +1,5 @@
 #![feature(let_chains)]
-#![allow(unused_doc_comments)]
+#![allow(unused_doc_comments, non_snake_case)]
 
 use std::{time::Instant, sync::Arc, fs::File, io::BufWriter, path::Path};
 
@@ -13,15 +13,29 @@ use raytracer::{
 
 use rand::Rng;
 use rand::rngs::ThreadRng;
-
 use indicatif::ParallelProgressIterator;
-
 use rayon::prelude::*;
 use png;
+use clap::Parser;
+
+#[derive(Parser, Debug)]
+#[command(about = "Simple Toy Raytracer written in Rust", long_about = None)]
+struct Args {
+    /// number of threads
+    #[arg(short, default_value_t = 1)]
+    threads: u8,
+
+    /// number of samples per pixel
+    #[arg(short, default_value_t = 100)]
+    samples: u16
+
+}
 
 fn main() {
 
-    rayon::ThreadPoolBuilder::new().num_threads(12).build_global().unwrap();
+    let args = Args::parse();
+
+    rayon::ThreadPoolBuilder::new().num_threads(args.threads.into()).build_global().unwrap();
     
     let start = Instant::now();
     // Program config
@@ -31,7 +45,7 @@ fn main() {
     const ASPECT_RATIO: f64 = 16.0 / 9.0;
     const IMAGE_WIDTH: u32 = 1280;
     const IMAGE_HEIGHT: u32 = (IMAGE_WIDTH as f64 / ASPECT_RATIO) as u32;
-    const SAMPLES_PER_PIXEL: u64 = 100;
+    let SAMPLES_PER_PIXEL: u64 = args.samples.into();
 
     let world = demo();
 
