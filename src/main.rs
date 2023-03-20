@@ -22,17 +22,17 @@ use clap::Parser;
 #[command(about = "Simple Toy Raytracer written in Rust", long_about = None)]
 struct Args {
     /// number of threads
-    #[arg(short, default_value_t = 1)]
+    #[arg(short, long, default_value_t = 1)]
     threads: u8,
 
     /// number of samples per pixel
-    #[arg(short, default_value_t = 100)]
+    #[arg(short, long, default_value_t = 100)]
     samples: u16,
 
-    #[arg(short, default_value_t = 1280, value_name = "width")]
+    #[arg(short, long, default_value_t = 1280, value_name = "width")]
     image_width: u32,
 
-    #[arg(short, default_value_t = 720, value_name = "height")]
+    #[arg(short, long, default_value_t = 720, value_name = "height")]
     image_height: u32,
 
 
@@ -63,9 +63,6 @@ fn main() {
     let aperture = 0.1;
 
     let camera = OrthographicCamera::new(origin, lookat, vup, 45.0, ASPECT_RATIO, aperture, dist_to_focus, 0.0, 1.0);
-
-    // writes header for ppm file to stdout, use with > to pipe to ppm file
-    // write_ppm_header_to_stdout(IMAGE_WIDTH, IMAGE_HEIGHT);
 
     // PNG setup
     let output_file_path = Path::new(r"C:\Users\canny-dev\Documents\rust-rt\test.png");

@@ -13,7 +13,7 @@ Ensure you are on the nightly build, this is a prerequisite for SIMD instruction
 rustup default nightly
 ```
 
-Cloning, building, and running
+Cloning, building, and running command to view options
 ```
 git clone https://github.com/canarado/rust-rt
 
@@ -22,10 +22,10 @@ cd rust-rt
 cargo b -r
 
 // windows
-.\target\release\raytracer.exe
+.\target\release\raytracer.exe --help
 
 // linux
-./target/release/raytracer
+./target/release/raytracer --help
 ```
 
 ## Custom Scenes
