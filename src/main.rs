@@ -13,7 +13,7 @@ use raytracer::{
 
 use rand::Rng;
 use rand::rngs::ThreadRng;
-use indicatif::ParallelProgressIterator;
+use indicatif::{ParallelProgressIterator, ProgressBar};
 use rayon::prelude::*;
 use png;
 use clap::Parser;
@@ -44,7 +44,7 @@ pub struct Args {
     obj_files: String,
 
     /// max-ray bounces
-    #[arg(short, default_value_t = 8, value_name = "max-ray-bounces")]
+    #[arg(short, default_value_t = 12, value_name = "max-ray-bounces")]
     ray_bounces: u8
 }
 
@@ -74,9 +74,12 @@ fn main() {
 
     let camera = OrthographicCamera::new(origin, lookat, vup, 45.0, ASPECT_RATIO, aperture, dist_to_focus, 0.0, 1.0);
 
+    let bar = &Box::new(ProgressBar::new(IMAGE_HEIGHT as u64));
+    bar.tick();
+
     let mut list =
-        (0..IMAGE_HEIGHT).rev().collect::<Vec<u32>>().into_par_iter().progress_count(IMAGE_HEIGHT as u64).flat_map(|j| {
-            (0..IMAGE_WIDTH).flat_map(|i| {
+        (0..IMAGE_HEIGHT).rev().collect::<Vec<u32>>().into_par_iter().flat_map(move |j| {
+            let data = (0..IMAGE_WIDTH).flat_map(|i| {
                 let mut rng = rand::thread_rng();
                 let mut pixel_color = Vec3::new(0.0, 0.0, 0.0);
 
@@ -88,7 +91,11 @@ fn main() {
                 }
 
                 [pixel_color.x, pixel_color.y, pixel_color.z]
-            }).collect::<Vec<f64>>()
+            }).collect::<Vec<f64>>();
+
+            bar.inc(1);
+
+            data
         }).collect::<Vec<f64>>();
 
     let sampled = apply_samples(&mut list, SAMPLES_PER_PIXEL, IMAGE_HEIGHT, IMAGE_WIDTH);
@@ -140,67 +147,67 @@ pub fn demo(args: &Args) -> Box<dyn Hit> {
     let rng = &mut rand::thread_rng();
     let mut world = World::new();
 
-    let ground_mat = CheckerTexture::new(ConstantTexture::new(Vec3::new(0.2, 0.3, 0.1)), ConstantTexture::new(Vec3::new(0.9, 0.9, 0.9)));//Arc::new(Lambertian::new(Vec3::new(0.5, 0.5, 0.5)));
-    let ground = Box::new(Sphere::new(Point3::new(0.0, -1000.0, 0.0), 1000.0, Arc::new(Lambertian::new(ground_mat))));
-    world.push(ground);
+    // let ground_mat = CheckerTexture::new(ConstantTexture::new(Vec3::new(0.2, 0.3, 0.1)), ConstantTexture::new(Vec3::new(0.9, 0.9, 0.9)));//Arc::new(Lambertian::new(Vec3::new(0.5, 0.5, 0.5)));
+    // let ground = Box::new(Sphere::new(Point3::new(0.0, -1000.0, 0.0), 1000.0, Arc::new(Lambertian::new(ground_mat))));
+    // world.push(ground);
 
-    for a in 0..=22 {
-        for b in 0..=22 {
-            let af = a as f64 - 11.0;
-            let bf = b as f64 - 11.0;
+    // for a in 0..=22 {
+    //     for b in 0..=22 {
+    //         let af = a as f64 - 11.0;
+    //         let bf = b as f64 - 11.0;
 
-            let c = rng.gen::<f64>();
-            let center = Point3::new(af + 0.9 * rng.gen::<f64>(), 0.2, bf + 0.9 * rng.gen::<f64>());
+    //         let c = rng.gen::<f64>();
+    //         let center = Point3::new(af + 0.9 * rng.gen::<f64>(), 0.2, bf + 0.9 * rng.gen::<f64>());
 
-            if (center - Point3::new(4.0, 0.2, 0.0)).length() > 0.9 {
-                if c < 0.45 {
-                    let albedo = Vec3::random(rng) * Vec3::random(rng);
-                    let mat = Arc::new(Lambertian::new(ConstantTexture::new(albedo)));
-                    let center2 = center + Vec3::new(0.0, rng.gen_range(0.0..=0.5), 0.0);
+    //         if (center - Point3::new(4.0, 0.2, 0.0)).length() > 0.9 {
+    //             if c < 0.45 {
+    //                 let albedo = Vec3::random(rng) * Vec3::random(rng);
+    //                 let mat = Arc::new(Lambertian::new(ConstantTexture::new(albedo)));
+    //                 let center2 = center + Vec3::new(0.0, rng.gen_range(0.0..=0.5), 0.0);
 
-                    let obj = Box::new(MovingSphere::new(center, center2, 0.2, mat, 0.0, 1.0));
+    //                 let obj = Box::new(MovingSphere::new(center, center2, 0.2, mat, 0.0, 1.0));
 
-                    world.push(obj);
-                } else if c < 0.75 {
-                    let albedo = Vec3::random_in_range(rng, 0.5..=1.0);
-                    let fuzz = rng.gen_range(0.0..=0.5);
-                    let mat = Arc::new(Metal::new(albedo, fuzz));
-                    let obj = Box::new(Sphere::new(center, 0.2, mat));
+    //                 world.push(obj);
+    //             } else if c < 0.75 {
+    //                 let albedo = Vec3::random_in_range(rng, 0.5..=1.0);
+    //                 let fuzz = rng.gen_range(0.0..=0.5);
+    //                 let mat = Arc::new(Metal::new(albedo, fuzz));
+    //                 let obj = Box::new(Sphere::new(center, 0.2, mat));
 
-                    world.push(obj);
-                } else {
-                    let mat = Arc::new(Dielectric::new(1.5));
-                    let obj = Box::new(Sphere::new(center, 0.2, mat));
+    //                 world.push(obj);
+    //             } else {
+    //                 let mat = Arc::new(Dielectric::new(1.5));
+    //                 let obj = Box::new(Sphere::new(center, 0.2, mat));
 
-                    world.push(obj);
-                }
-            }
-        }
-    }
-
-    let mat1 = Arc::new(Dielectric::new(1.5));
-    world.push(
-        Box::new(Sphere::new(Point3::new(0.0, 1.0, 0.0), 1.0, mat1))
-    );
-
-    let mat2 = Arc::new(Lambertian::new(ConstantTexture::new(Vec3::new(0.4, 0.2, 0.1))));
-    world.push(
-        Box::new(Sphere::new(Point3::new(-4.0, 1.0, 0.0), 1.0, mat2))
-    );
-
-    let mat3 = Arc::new(Metal::new(Vec3::new(0.7, 0.6, 0.5), 0.0));
-    world.push(
-        Box::new(Sphere::new(Point3::new(4.0, 1.0, 0.0), 1.0, mat3))
-    );
-
-    // let obj_paths = args.obj_files.split(",");
-
-    // for obj in obj_paths.into_iter() {
-    //     let obj_path = Path::new(obj);
-    //     let _obj = load_obj_and_position(obj_path);
-
-    //     add_obj_to_world(&mut world, _obj, Vec3::new(0., 0., 0.))
+    //                 world.push(obj);
+    //             }
+    //         }
+    //     }
     // }
+
+    // let mat1 = Arc::new(Dielectric::new(1.5));
+    // world.push(
+    //     Box::new(Sphere::new(Point3::new(0.0, 1.0, 0.0), 1.0, mat1))
+    // );
+
+    // let mat2 = Arc::new(Lambertian::new(ConstantTexture::new(Vec3::new(0.4, 0.2, 0.1))));
+    // world.push(
+    //     Box::new(Sphere::new(Point3::new(-4.0, 1.0, 0.0), 1.0, mat2))
+    // );
+
+    // let mat3 = Arc::new(Metal::new(Vec3::new(0.7, 0.6, 0.5), 0.0));
+    // world.push(
+    //     Box::new(Sphere::new(Point3::new(4.0, 1.0, 0.0), 1.0, mat3))
+    // );
+
+    let obj_paths = args.obj_files.split(",");
+
+    for obj in obj_paths.into_iter() {
+        let obj_path = Path::new(obj);
+        let _obj = load_obj_and_position(obj_path);
+
+        add_obj_to_world(&mut world, _obj, Vec3::new(0., 0., 0.))
+    }
 
     Box::new(BVH::new(world, 0.0, 1.0))
 }

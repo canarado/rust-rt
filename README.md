@@ -52,7 +52,7 @@ you can add objects with materials into the scene in the code in the appropriate
 - [ ] GUI preview + object config
 - [ ] update functions to use one thread_rng per thread instead of random ones thrown about
 - [ ] modularize code and move vital functions out of main
-- [ ] change progress bar to increment when a thread exits instead of when one is spawned
+- [x] change progress bar to increment when a thread exits instead of when one is spawned
 - [ ] add license
 - [ ] add matrix transformations to move, scale, and rotate meshes
 - [ ] optimize bvh or implement KD-Trees
