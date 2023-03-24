@@ -5,6 +5,12 @@ This is a CPU based raytracer with some basic support for 3D models, and light b
 
 This project is a rust port with additional addons.  
 
+## Example Renders
+Below are a few renders I made, the 3d objects are fairly low quality and noisy due to the slow speeds my CPU calculates large meshes at, the Standford Dragon, for example, took 21 hours and 30 minutes at 150 samples per pixel with 20 light bounces.
+![Simple Scene](assets/renda.png)
+![Satellite](assets/blongus.png)
+![Stanford Dragon](assets/ledragoon.png)
+
 ## Build Instructions
 This will build the demo scene
 
