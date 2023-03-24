@@ -1,5 +1,5 @@
 # Toy Raytracer
-with inspiration from the "Ray Tracing in One Weekend" book series by Peter Shirley   
+with inspiration from the "Ray Tracing in One Weekend" book series by Peter Shirley  
 
 This is a CPU based raytracer with some basic support for 3D models, and light based rendering methods  
 
@@ -37,8 +37,8 @@ you can add objects with materials into the scene in the code in the appropriate
 - [ ] add config file for custom scenes
 - [x] add rayon for multiple threads rendering
 - [x] output to png instead of ppm
-- [ ] add program flags
-    - [ ] output file name and directory
+- [x] add program flags
+    - [x] output file name and directory
     - [x] image dimensions
     - [x] core count
     - [x] sample rate
@@ -46,3 +46,7 @@ you can add objects with materials into the scene in the code in the appropriate
 - [ ] GUI preview + object config
 - [ ] update functions to use one thread_rng per thread instead of random ones thrown about
 - [ ] modularize code and move vital functions out of main
+- [ ] change progress bar to increment when a thread exits instead of when one is spawned
+- [ ] add license
+- [ ] add matrix transformations to move, scale, and rotate meshes
+- [ ] optimize bvh or implement KD-Trees

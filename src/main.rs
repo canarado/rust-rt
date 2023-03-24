@@ -1,5 +1,5 @@
 #![feature(let_chains)]
-#![allow(unused_doc_comments, non_snake_case)]
+#![allow(unused_doc_comments, non_snake_case, unused_imports, unused_variables)]
 
 use std::{time::Instant, sync::Arc, fs::File, io::BufWriter, path::Path};
 
@@ -8,7 +8,7 @@ use raytracer::{
     color::*,
     ray::*,
     hittable::*,
-    sphere::{Sphere, MovingSphere}, camera::{OrthographicCamera}, material::{Lambertian, Metal, Dielectric}
+    sphere::{Sphere, MovingSphere}, camera::{OrthographicCamera}, material::{Lambertian, Metal, Dielectric}, texture::{CheckerTexture, ConstantTexture}, bvh::BVH, obj::{load_obj_and_position, add_obj_to_world}, util::clamp
 };
 
 use rand::Rng;
@@ -20,7 +20,7 @@ use clap::Parser;
 
 #[derive(Parser, Debug)]
 #[command(about = "Simple Toy Raytracer written in Rust", long_about = None)]
-struct Args {
+pub struct Args {
     /// number of threads
     #[arg(short, long, default_value_t = 1)]
     threads: u8,
@@ -29,13 +29,23 @@ struct Args {
     #[arg(short, long, default_value_t = 100)]
     samples: u16,
 
-    #[arg(short, long, default_value_t = 1280, value_name = "width")]
+    #[arg(long, default_value_t = 1280, value_name = "width")]
     image_width: u32,
 
-    #[arg(short, long, default_value_t = 720, value_name = "height")]
+    #[arg(long, default_value_t = 720, value_name = "height")]
     image_height: u32,
 
+    /// path to output to, should be a png file
+    #[arg(short, long, value_name = "output")]
+    output_file_path: String,
 
+    /// comma-seperated paths to obj files to render in, only 1 supported for now
+    #[arg(long, value_name = "obj-files")]
+    obj_files: String,
+
+    /// max-ray bounces
+    #[arg(short, default_value_t = 8, value_name = "max-ray-bounces")]
+    ray_bounces: u8
 }
 
 fn main() {
@@ -46,7 +56,7 @@ fn main() {
     
     let start = Instant::now();
     // Program config
-    const MAX_RECURSION_DEPTH: u64 = 50;
+    let MAX_RECURSION_DEPTH: u8 = clamp(args.ray_bounces as usize, 2, 50) as u8;
     
     // image configuration
     let IMAGE_WIDTH: u32 = args.image_width.into();
@@ -54,18 +64,37 @@ fn main() {
     let SAMPLES_PER_PIXEL: u64 = args.samples.into();
     let ASPECT_RATIO: f64 = IMAGE_WIDTH as f64 / IMAGE_HEIGHT as f64;
 
-    let world = demo();
+    let world = demo(&args);
 
-    let origin = Point3::new(13.0, 2.0, 3.0);
+    let origin = Point3::new(120., 10.0, 120.);
     let lookat = Point3::new(0.0, 0.0, 0.0);
     let vup = Vec3::new(0.0, 1.0, 0.0);
-    let dist_to_focus = 10.0;
+    let dist_to_focus = 20.0;
     let aperture = 0.1;
 
     let camera = OrthographicCamera::new(origin, lookat, vup, 45.0, ASPECT_RATIO, aperture, dist_to_focus, 0.0, 1.0);
 
+    let mut list =
+        (0..IMAGE_HEIGHT).rev().collect::<Vec<u32>>().into_par_iter().progress_count(IMAGE_HEIGHT as u64).flat_map(|j| {
+            (0..IMAGE_WIDTH).flat_map(|i| {
+                let mut rng = rand::thread_rng();
+                let mut pixel_color = Vec3::new(0.0, 0.0, 0.0);
+
+                for _ in 0..SAMPLES_PER_PIXEL {
+                    let u = (i as f64 + rng.gen::<f64>()) / (IMAGE_WIDTH - 1) as f64;
+                    let v = (j as f64 + rng.gen::<f64>()) / (IMAGE_HEIGHT - 1) as f64;
+                    let r = camera.get_ray(u, v);
+                    pixel_color += ray_color(r, &world, MAX_RECURSION_DEPTH.into(), &mut rng);
+                }
+
+                [pixel_color.x, pixel_color.y, pixel_color.z]
+            }).collect::<Vec<f64>>()
+        }).collect::<Vec<f64>>();
+
+    let sampled = apply_samples(&mut list, SAMPLES_PER_PIXEL, IMAGE_HEIGHT, IMAGE_WIDTH);
+
     // PNG setup
-    let output_file_path = Path::new(r"C:\Users\canny-dev\Documents\rust-rt\test.png");
+    let output_file_path = Path::new(&args.output_file_path);
     let file = File::create(output_file_path).unwrap();
     let ref mut w = BufWriter::new(file);
 
@@ -81,43 +110,12 @@ fn main() {
     ));
     let mut writer = encoder.write_header().unwrap();
 
-    /**
-     * image should be a vector of <color1.0, color1.1, color1.2, color.0, ...>
-     * 
-     * iter over height, map values
-     *   iter over width, map values
-     *     pixel color
-     *   take pixel colors and collect them into a vector of individual color components
-     * take vector of color components, and collect it all to a 1d vector of color components
-     * 
-     * take the 1d vector and chunk(3), write formatted {} {} {}, Color; to a list, print list to stdout
-     */
-
-    let mut list =
-        (0..IMAGE_HEIGHT).rev().collect::<Vec<u32>>().into_par_iter().progress_count(IMAGE_HEIGHT as u64).flat_map(|j| {
-            (0..IMAGE_WIDTH).flat_map(|i| {
-                let mut rng = rand::thread_rng();
-                let mut pixel_color = Vec3::new(0.0, 0.0, 0.0);
-
-                for _ in 0..SAMPLES_PER_PIXEL {
-                    let u = (i as f64 + rng.gen::<f64>()) / (IMAGE_WIDTH - 1) as f64;
-                    let v = (j as f64 + rng.gen::<f64>()) / (IMAGE_HEIGHT - 1) as f64;
-                    let r = camera.get_ray(u, v);
-                    pixel_color += ray_color(r, &world, MAX_RECURSION_DEPTH, &mut rng);
-                }
-
-                [pixel_color.x, pixel_color.y, pixel_color.z]
-            }).collect::<Vec<f64>>()
-        }).collect::<Vec<f64>>();
-
-    let sampled = apply_samples(&mut list, SAMPLES_PER_PIXEL, IMAGE_HEIGHT, IMAGE_WIDTH);
-
     writer.write_image_data(&sampled).unwrap();
 
     eprintln!("Render Time: {:.2?}", start.elapsed());
 }
 
-fn ray_color(ray: Ray, world: &World, depth: u64, rng: &mut ThreadRng) -> Vec3 {
+fn ray_color(ray: Ray, world: &Box<dyn Hit>, depth: u64, rng: &mut ThreadRng) -> Vec3 {
 
     if depth <= 0 {
         return Vec3::new(0.0, 0.0, 0.0)
@@ -138,73 +136,71 @@ fn ray_color(ray: Ray, world: &World, depth: u64, rng: &mut ThreadRng) -> Vec3 {
     (1.0 - t) * Vec3::new(1.0, 1.0, 1.0) + t * Vec3::new(0.5, 0.7, 1.0)
 }
 
-pub fn demo() -> World {
+pub fn demo(args: &Args) -> Box<dyn Hit> {
     let rng = &mut rand::thread_rng();
     let mut world = World::new();
 
-    let ground_mat = Arc::new(Lambertian::new(Vec3::new(0.5, 0.5, 0.5)));
-    let ground = Box::new(Sphere::new(Point3::new(0.0, -1000.0, 0.0), 1000.0, ground_mat));
-    world.push(ground);
+    // let ground_mat = CheckerTexture::new(ConstantTexture::new(Vec3::new(0.2, 0.3, 0.1)), ConstantTexture::new(Vec3::new(0.9, 0.9, 0.9)));//Arc::new(Lambertian::new(Vec3::new(0.5, 0.5, 0.5)));
+    // let ground = Box::new(Sphere::new(Point3::new(0.0, -1000.0, 0.0), 1000.0, Arc::new(Lambertian::new(ground_mat))));
+    // world.push(ground);
 
-    for a in 0..=22 {
-        for b in 0..=22 {
-            let af = a as f64 - 11.0;
-            let bf = b as f64 - 11.0;
+    // for a in 0..=22 {
+    //     for b in 0..=22 {
+    //         let af = a as f64 - 11.0;
+    //         let bf = b as f64 - 11.0;
 
-            let c = rng.gen::<f64>();
-            let center = Point3::new(af + 0.9 * rng.gen::<f64>(), 0.2, bf + 0.9 * rng.gen::<f64>());
+    //         let c = rng.gen::<f64>();
+    //         let center = Point3::new(af + 0.9 * rng.gen::<f64>(), 0.2, bf + 0.9 * rng.gen::<f64>());
 
-            if (center - Point3::new(4.0, 0.2, 0.0)).length() > 0.9 {
-                if c < 0.45 {
-                    let albedo = Vec3::random(rng) * Vec3::random(rng);
-                    let mat = Arc::new(Lambertian::new(albedo));
-                    let center2 = center + Vec3::new(0.0, rng.gen_range(0.0..=0.5), 0.0);
+    //         if (center - Point3::new(4.0, 0.2, 0.0)).length() > 0.9 {
+    //             if c < 0.45 {
+    //                 let albedo = Vec3::random(rng) * Vec3::random(rng);
+    //                 let mat = Arc::new(Lambertian::new(ConstantTexture::new(albedo)));
+    //                 let center2 = center + Vec3::new(0.0, rng.gen_range(0.0..=0.5), 0.0);
 
-                    let obj = Box::new(MovingSphere::new(center, center2, 0.2, mat, 0.0, 1.0));
+    //                 let obj = Box::new(MovingSphere::new(center, center2, 0.2, mat, 0.0, 1.0));
 
-                    world.push(obj);
-                } else if c < 0.75 {
-                    let albedo = Vec3::random_in_range(rng, 0.5..=1.0);
-                    let fuzz = rng.gen_range(0.0..=0.5);
-                    let mat = Arc::new(Metal::new(albedo, fuzz));
-                    let obj = Box::new(Sphere::new(center, 0.2, mat));
+    //                 world.push(obj);
+    //             } else if c < 0.75 {
+    //                 let albedo = Vec3::random_in_range(rng, 0.5..=1.0);
+    //                 let fuzz = rng.gen_range(0.0..=0.5);
+    //                 let mat = Arc::new(Metal::new(albedo, fuzz));
+    //                 let obj = Box::new(Sphere::new(center, 0.2, mat));
 
-                    world.push(obj);
-                } else {
-                    let mat = Arc::new(Dielectric::new(1.5));
-                    let obj = Box::new(Sphere::new(center, 0.2, mat));
+    //                 world.push(obj);
+    //             } else {
+    //                 let mat = Arc::new(Dielectric::new(1.5));
+    //                 let obj = Box::new(Sphere::new(center, 0.2, mat));
 
-                    world.push(obj);
-                }
-            }
-        }
+    //                 world.push(obj);
+    //             }
+    //         }
+    //     }
+    // }
+
+    // let mat1 = Arc::new(Dielectric::new(1.5));
+    // world.push(
+    //     Box::new(Sphere::new(Point3::new(0.0, 1.0, 0.0), 1.0, mat1))
+    // );
+
+    // let mat2 = Arc::new(Lambertian::new(ConstantTexture::new(Vec3::new(0.4, 0.2, 0.1))));
+    // world.push(
+    //     Box::new(Sphere::new(Point3::new(-4.0, 1.0, 0.0), 1.0, mat2))
+    // );
+
+    // let mat3 = Arc::new(Metal::new(Vec3::new(0.7, 0.6, 0.5), 0.0));
+    // world.push(
+    //     Box::new(Sphere::new(Point3::new(4.0, 1.0, 0.0), 1.0, mat3))
+    // );
+
+    let obj_paths = args.obj_files.split(",");
+
+    for obj in obj_paths.into_iter() {
+        let obj_path = Path::new(obj);
+        let _obj = load_obj_and_position(obj_path);
+
+        add_obj_to_world(&mut world, _obj, Vec3::new(0., 0., 0.))
     }
 
-    let mat1 = Arc::new(Dielectric::new(1.5));
-    world.push(
-        Box::new(Sphere::new(Point3::new(0.0, 1.0, 0.0), 1.0, mat1))
-    );
-
-    let mat2 = Arc::new(Lambertian::new(Vec3::new(0.4, 0.2, 0.1)));
-    world.push(
-        Box::new(Sphere::new(Point3::new(-4.0, 1.0, 0.0), 1.0, mat2))
-    );
-
-    let mat3 = Arc::new(Metal::new(Vec3::new(0.7, 0.6, 0.5), 0.0));
-    world.push(
-        Box::new(Sphere::new(Point3::new(4.0, 1.0, 0.0), 1.0, mat3))
-    );
-
-    world
-}
-
-pub fn simple_test() -> World {
-    let mut world = World::new();
-
-    let mat = Arc::new(Lambertian::new(Vec3::new(0.5, 0.5, 0.5)));
-    let sphere = Box::new(Sphere::new(Point3::new(0.0, 0.0, 0.0), 1.0, mat));
-
-    world.push(sphere);
-
-    world
+    Box::new(BVH::new(world, 0.0, 1.0))
 }

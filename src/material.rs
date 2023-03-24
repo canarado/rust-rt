@@ -1,23 +1,23 @@
-use crate::{ray::Ray, hittable::HitRecord, vec3::{random_in_unit_sphere, Vec3, unit_vector, refract, dot_product, reflect}};
+use crate::{ray::Ray, hittable::HitRecord, vec3::{random_in_unit_sphere, Vec3, unit_vector, refract, dot_product, reflect}, texture::Texture};
 use rand::Rng;
 
 pub trait Scatter: Sync+Send {
     fn scatter(&self, r: &Ray, rec: &HitRecord) -> Option<(Vec3, Ray)>;
 }
 
-pub struct Lambertian {
-    albedo: Vec3
+pub struct Lambertian<T: Texture> {
+    albedo: T
 }
 
-impl Lambertian {
-    pub fn new(albedo: Vec3) -> Lambertian {
+impl<T: Texture> Lambertian<T> {
+    pub fn new(albedo: T) -> Lambertian<T> {
         Lambertian {
             albedo
         }
     }
 }
 
-impl Scatter for Lambertian {
+impl<T: Texture> Scatter for Lambertian<T> {
     fn scatter(&self, r: &Ray, rec: &HitRecord) -> Option<(Vec3, Ray)> {
         let mut scatter_direction = rec.normal + random_in_unit_sphere(&mut rand::thread_rng()).normalized();
 
@@ -27,7 +27,7 @@ impl Scatter for Lambertian {
 
         let scattered = Ray::new(rec.p, scatter_direction, r.time);
 
-        Some((self.albedo, scattered))
+        Some((self.albedo.value(rec.u, rec.v, &rec.p), scattered))
     }
 }
 

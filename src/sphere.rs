@@ -1,6 +1,6 @@
-use std::{sync::Arc, simd::{Simd, f64x2}};
+use std::{sync::Arc, simd::{Simd, f64x2}, f64::consts::PI};
 
-use crate::{vec3::{Point3, dot_product, Vec3}, hittable::{Hit, HitRecord}, ray::Ray, material::Scatter};
+use crate::{vec3::{Point3, dot_product, Vec3}, hittable::{Hit, HitRecord}, ray::Ray, material::Scatter, aabb::AABB};
 
 pub struct Sphere {
     pub center: Point3,
@@ -13,6 +13,16 @@ impl Sphere {
         Sphere {
             center, radius, mat: material
         }
+    }
+
+    pub fn get_uv(p: &Vec3) -> (f64, f64) {
+        let theta = f64::acos(-p.y);
+        let phi = f64::atan2(-p.z, p.x) + PI;
+
+       let u = phi / (2. * PI);
+       let v = theta / PI;
+
+       (u, v)
     }
 }
 
@@ -46,14 +56,30 @@ impl Hit for Sphere {
             t: root,
             p: r.at(root),
             mat: self.mat.clone(),
+            u: 0.,
+            v: 0.,
             normal: Vec3::new(0.0, 0.0, 0.0),
             front_face: false
         };
 
         let outward_normal = (rec.p - self.center) / self.radius;
+
+        let (u, v) = Sphere::get_uv(&outward_normal);
+        rec.u = u;
+        rec.v = v;
+
         rec.set_face_normal(&r, &outward_normal);
 
         Some(rec)
+    }
+
+    fn bounding_box(&self, time0: f64, time1: f64) -> Option<AABB> {
+        Some(
+            AABB::new(
+                &(self.center - Vec3::new(self.radius, self.radius, self.radius)),
+                &(self.center + Vec3::new(self.radius, self.radius, self.radius))
+            )
+        )
     }
 }
 
@@ -112,13 +138,34 @@ impl Hit for MovingSphere {
             t: root,
             p: r.at(root),
             mat: self.mat.clone(),
+            u: 0.,
+            v: 0.,
             normal: Vec3::new(0.0, 0.0, 0.0),
             front_face: false
         };
 
         let outward_normal = (rec.p - self.center(&r.time)) / self.radius;
+
+        let (u, v) = Sphere::get_uv(&outward_normal);
+        rec.u = u;
+        rec.v = v;
+
         rec.set_face_normal(r, &outward_normal);
 
         Some(rec)
+    }
+
+    fn bounding_box(&self, time0: f64, time1: f64) -> Option<AABB> {
+        let box0 = AABB::new(
+            &(self.center(&time0) - Vec3::new(self.radius, self.radius, self.radius)),
+            &(self.center(&time0) + Vec3::new(self.radius, self.radius, self.radius))
+        );
+
+        let box1 = AABB::new(
+            &(self.center(&time1) - Vec3::new(self.radius, self.radius, self.radius)),
+            &(self.center(&time1) + Vec3::new(self.radius, self.radius, self.radius))
+        );
+
+        Some(AABB::surrounding_box(&box0, &box1))
     }
 }

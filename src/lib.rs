@@ -8,3 +8,8 @@ pub mod sphere;
 pub mod util;
 pub mod camera;
 pub mod material;
+pub mod aabb;
+pub mod bvh;
+pub mod texture;
+pub mod obj;
+pub mod triangle;

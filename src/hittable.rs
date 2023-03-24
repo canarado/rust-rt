@@ -1,12 +1,14 @@
 use std::{sync::Arc};
 
-use crate::{vec3::*, ray::Ray, material::Scatter};
+use crate::{vec3::*, ray::Ray, material::Scatter, aabb::AABB};
 
 pub struct HitRecord {
     pub p: Point3,
     pub normal: Vec3,
     pub mat: Arc<dyn Scatter>,
     pub t: f64,
+    pub u: f64,
+    pub v: f64,
     pub front_face: bool,
 }
 
@@ -24,6 +26,7 @@ impl HitRecord {
 
 pub trait Hit: Send + Sync {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
+    fn bounding_box(&self, time0: f64, time1: f64) -> Option<AABB>;
 }
 
 pub type World = Vec<Box<dyn Hit>>;
@@ -41,5 +44,22 @@ impl Hit for World {
         }
 
         tmp_rec
+    }
+
+    fn bounding_box(&self, time0: f64, time1: f64) -> Option<AABB> {
+        match self.first() {
+            Some(first) =>
+                match first.bounding_box(time0, time1) {
+                    Some(bbox) =>
+                        self.iter().skip(1).try_fold(bbox, |acc, hitable|
+                            match hitable.bounding_box(time0, time1) {
+                                Some(bbox) => Some(AABB::surrounding_box(&acc, &bbox)),
+                                _ => None
+                            }
+                        ),
+                    _ => None
+                },
+            _ => None
+        }
     }
 }
