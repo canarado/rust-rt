@@ -13,7 +13,7 @@ use raytracer::{
 
 use rand::Rng;
 use rand::rngs::ThreadRng;
-use indicatif::{ParallelProgressIterator, ProgressBar};
+use indicatif::ProgressBar;
 use rayon::prelude::*;
 use png;
 use clap::Parser;
