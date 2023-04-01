@@ -25,7 +25,7 @@ pub fn load_obj_and_position(path: &Path) -> BVH {
             }).collect()
         },
         Err(e) => {
-            vec![Arc::new(Lambertian::new(ConstantTexture::new(Vec3::new(0.5, 0.5, 0.5))))]
+            vec![default_material.clone()]
         }
     };
 
