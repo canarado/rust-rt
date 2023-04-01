@@ -12,15 +12,22 @@ pub fn load_obj_and_position(path: &Path) -> BVH {
 
     let default_material = Arc::new(Lambertian::new(ConstantTexture::new(Vec3::new(0.6, 0.6, 0.6))));
 
-    let materials: Vec<Arc<dyn Scatter>> = mats.unwrap().iter().map(|m| {
-        let mat: Arc<dyn Scatter> = match m.illumination_model {
-            Some(7) => Arc::new(Dielectric::new(m.optical_density as f64)),
-            Some(5) => Arc::new(Metal::new(Vec3::new(m.diffuse[0] as f64, m.diffuse[1] as f64, m.diffuse[2] as f64), (1. / m.shininess) as f64)),
-            _ => Arc::new(Lambertian::new(ConstantTexture::new(Vec3::new(m.diffuse[0] as f64, m.diffuse[1] as f64, m.diffuse[2] as f64))))
-        };
+    let materials: Vec<Arc<dyn Scatter>> = match mats {
+        Ok(mmats) => {
+            mmats.iter().map(|m| {
+                let mat: Arc<dyn Scatter> = match m.illumination_model {
+                    Some(7) => Arc::new(Dielectric::new(m.optical_density as f64)),
+                    Some(5) => Arc::new(Metal::new(Vec3::new(m.diffuse[0] as f64, m.diffuse[1] as f64, m.diffuse[2] as f64), (1. / m.shininess) as f64)),
+                    _ => Arc::new(Lambertian::new(ConstantTexture::new(Vec3::new(m.diffuse[0] as f64, m.diffuse[1] as f64, m.diffuse[2] as f64))))
+                };
 
-        mat
-    }).collect();
+                mat
+            }).collect()
+        },
+        Err(e) => {
+            vec![Arc::new(Lambertian::new(ConstantTexture::new(Vec3::new(0.5, 0.5, 0.5))))]
+        }
+    };
 
     for m in models.iter() {
         let mesh = &m.mesh;
