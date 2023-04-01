@@ -8,15 +8,15 @@ pub struct Camera {
     pub lower_left_corner: Point3,
     pub horizontal: Vec3,
     pub vertical: Vec3,
-    pub time0: f64,
-    pub time1: f64
+    pub time0: f32,
+    pub time1: f32
 }
 
 unsafe impl Sync for Camera {}
 unsafe impl Send for Camera {}
 
 impl Camera {
-    pub fn new(viewport_height: f64, viewport_width: f64, focal_length: f64, origin: Point3, time0: f64, time1: f64) -> Camera {
+    pub fn new(viewport_height: f32, viewport_width: f32, focal_length: f32, origin: Point3, time0: f32, time1: f32) -> Camera {
         let h = Vec3::new(viewport_width, 0.0, 0.0);
         let v = Vec3::new(0.0, viewport_height, 0.0);
         Camera {
@@ -29,7 +29,7 @@ impl Camera {
         }
     }
 
-    pub fn get_ray(self, u: f64, v: f64) -> Ray {
+    pub fn get_ray(self, u: f32, v: f32) -> Ray {
 
         let mut rng = rand::thread_rng();
 
@@ -44,16 +44,16 @@ pub struct OrthographicCamera {
     pub horizontal: Vec3,
     pub vertical: Vec3,
     pub uvw: [Vec3; 3],
-    pub lens_radius: f64,
-    pub time0: f64,
-    pub time1: f64
+    pub lens_radius: f32,
+    pub time0: f32,
+    pub time1: f32
 }
 
 unsafe impl Sync for OrthographicCamera {}
 unsafe impl Send for OrthographicCamera {}
 
 impl OrthographicCamera {
-    pub fn new(origin: Point3, lookat: Point3, vup: Vec3, vfov: f64, aspect_ratio: f64, aperture: f64, focus_dist: f64, time0: f64, time1: f64) -> OrthographicCamera {
+    pub fn new(origin: Point3, lookat: Point3, vup: Vec3, vfov: f32, aspect_ratio: f32, aperture: f32, focus_dist: f32, time0: f32, time1: f32) -> OrthographicCamera {
         let theta = vfov.to_radians();
         let h = (theta / 2.0).tan();
         let v_height = 2.0 * h;
@@ -73,7 +73,7 @@ impl OrthographicCamera {
         }
     }
 
-    pub fn get_ray(&self, s: f64, t: f64) -> Ray {
+    pub fn get_ray(&self, s: f32, t: f32) -> Ray {
 
         let mut rng = rand::thread_rng();
 

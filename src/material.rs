@@ -33,11 +33,11 @@ impl<T: Texture> Scatter for Lambertian<T> {
 
 pub struct Metal {
     albedo: Vec3,
-    fuzz: f64
+    fuzz: f32
 }
 
 impl Metal {
-    pub fn new(albedo: Vec3, fuzz: f64) -> Metal {
+    pub fn new(albedo: Vec3, fuzz: f32) -> Metal {
         Metal {
             albedo, fuzz
         }
@@ -58,26 +58,26 @@ impl Scatter for Metal {
 }
 
 pub struct Dielectric {
-    ir: f64
+    ir: f32
 }
 
 impl Dielectric {
-    pub fn new(ir: f64) -> Dielectric {
+    pub fn new(ir: f32) -> Dielectric {
         Dielectric { ir }
     }
 
-    pub fn reflectance(cosine: f64, r: f64) -> f64 {
+    pub fn reflectance(cosine: f32, r: f32) -> f32 {
         let mut r0 = (1.0 - r) / (1.0 + r);
         r0 *= r0;
 
-        r0 + (1.0 - r0) * f64::powf(1.0 - cosine, 5.0)
+        r0 + (1.0 - r0) * f32::powf(1.0 - cosine, 5.0)
     }
 }
 
 impl Scatter for Dielectric {
     fn scatter(&self, r: &Ray, rec: &HitRecord) -> Option<(Vec3, Ray)> {
         let attenuation = Vec3::new(1.0, 1.0, 1.0);
-        let refract_ratio: f64;
+        let refract_ratio: f32;
 
         if rec.front_face {
             refract_ratio = 1.0 / self.ir;
@@ -86,13 +86,13 @@ impl Scatter for Dielectric {
         }
 
         let unit_dir = unit_vector(&r.direction);
-        let cos_theta = f64::min(dot_product(&-unit_dir, &rec.normal), 1.0);
+        let cos_theta = f32::min(dot_product(&-unit_dir, &rec.normal), 1.0);
         let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
 
         let cannot_refract = refract_ratio * sin_theta > 1.0;
         let direction: Vec3;
 
-        if cannot_refract || Dielectric::reflectance(cos_theta, refract_ratio) > rand::thread_rng().gen::<f64>() {
+        if cannot_refract || Dielectric::reflectance(cos_theta, refract_ratio) > rand::thread_rng().gen::<f32>() {
             direction = reflect(&unit_dir, &rec.normal);
         } else {
             direction = refract(&unit_dir, &rec.normal, refract_ratio);

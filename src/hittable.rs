@@ -6,9 +6,9 @@ pub struct HitRecord {
     pub p: Point3,
     pub normal: Vec3,
     pub mat: Arc<dyn Scatter>,
-    pub t: f64,
-    pub u: f64,
-    pub v: f64,
+    pub t: f32,
+    pub u: f32,
+    pub v: f32,
     pub front_face: bool,
 }
 
@@ -25,14 +25,14 @@ impl HitRecord {
 }
 
 pub trait Hit: Send + Sync {
-    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
-    fn bounding_box(&self, time0: f64, time1: f64) -> Option<AABB>;
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord>;
+    fn bounding_box(&self, time0: f32, time1: f32) -> Option<AABB>;
 }
 
 pub type World = Vec<Box<dyn Hit>>;
 
 impl Hit for World {
-    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         let mut tmp_rec = None;
         let mut closest_so_far = t_max;
 
@@ -46,7 +46,7 @@ impl Hit for World {
         tmp_rec
     }
 
-    fn bounding_box(&self, time0: f64, time1: f64) -> Option<AABB> {
+    fn bounding_box(&self, time0: f32, time1: f32) -> Option<AABB> {
         match self.first() {
             Some(first) =>
                 match first.bounding_box(time0, time1) {

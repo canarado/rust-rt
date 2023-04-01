@@ -1,6 +1,6 @@
 use crate::util::clampf;
 
-pub type Color = (f64, f64, f64);
+pub type Color = (f32, f32, f32);
 
 pub fn write_color_to_stdout(pixel_color: Color, samples_per_pixel: u64) {
 
@@ -8,7 +8,7 @@ pub fn write_color_to_stdout(pixel_color: Color, samples_per_pixel: u64) {
     let mut g = pixel_color.1;
     let mut b = pixel_color.2;
 
-    let scale: f64 = 1.0 / samples_per_pixel as f64;
+    let scale: f32 = 1.0 / samples_per_pixel as f32;
 
     // r = (r * scale);
     // g = (g * scale);
@@ -24,13 +24,13 @@ pub fn write_ppm_header_to_stdout(image_width: u64, image_height: u64) {
     println!("P3\n{} {}\n255", image_width, image_height);
 }
 
-// samples_per_pixel: f64
+// samples_per_pixel: f32
 pub fn write_color_to_list(vector: &mut Vec<String>, pixel_color: Color, samples_per_pixel: u64) {
     let mut r = pixel_color.0;
     let mut g = pixel_color.1;
     let mut b = pixel_color.2;
 
-    let scale: f64 = 1.0 / samples_per_pixel as f64;
+    let scale: f32 = 1.0 / samples_per_pixel as f32;
 
     r *= scale;
     g *= scale;
@@ -41,7 +41,7 @@ pub fn write_color_to_list(vector: &mut Vec<String>, pixel_color: Color, samples
     vector.push(cstr);
 }
 
-pub fn apply_samples(list: &mut Vec<f64>, samples_per_pixel: u64, height: u32, width: u32) -> Vec<u8> {
+pub fn apply_samples(list: &mut Vec<f32>, samples_per_pixel: u64, height: u32, width: u32) -> Vec<u8> {
 
     let mut res: Vec<u8> = Vec::with_capacity((height * width * 3).try_into().unwrap());
 
@@ -50,7 +50,7 @@ pub fn apply_samples(list: &mut Vec<f64>, samples_per_pixel: u64, height: u32, w
         let mut g = c[1];
         let mut b = c[2];
 
-        let scale: f64 = 1.0 / samples_per_pixel as f64;
+        let scale: f32 = 1.0 / samples_per_pixel as f32;
 
         r *= scale;
         g *= scale;

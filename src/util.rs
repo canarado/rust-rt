@@ -1,4 +1,4 @@
-pub fn clampf(x: f64, min: f64, max: f64) -> f64 {
+pub fn clampf(x: f32, min: f32, max: f32) -> f32 {
     if x < min {
         return min
     }

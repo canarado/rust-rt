@@ -62,7 +62,7 @@ fn main() {
     let IMAGE_WIDTH: u32 = args.image_width.into();
     let IMAGE_HEIGHT: u32 = args.image_height.into();
     let SAMPLES_PER_PIXEL: u64 = args.samples.into();
-    let ASPECT_RATIO: f64 = IMAGE_WIDTH as f64 / IMAGE_HEIGHT as f64;
+    let ASPECT_RATIO: f32 = IMAGE_WIDTH as f32 / IMAGE_HEIGHT as f32;
 
     let world = demo(&args);
 
@@ -84,19 +84,19 @@ fn main() {
                 let mut pixel_color = Vec3::new(0.0, 0.0, 0.0);
 
                 for _ in 0..SAMPLES_PER_PIXEL {
-                    let u = (i as f64 + rng.gen::<f64>()) / (IMAGE_WIDTH - 1) as f64;
-                    let v = (j as f64 + rng.gen::<f64>()) / (IMAGE_HEIGHT - 1) as f64;
+                    let u = (i as f32 + rng.gen::<f32>()) / (IMAGE_WIDTH - 1) as f32;
+                    let v = (j as f32 + rng.gen::<f32>()) / (IMAGE_HEIGHT - 1) as f32;
                     let r = camera.get_ray(u, v);
                     pixel_color += ray_color(r, &world, MAX_RECURSION_DEPTH.into(), &mut rng);
                 }
 
                 [pixel_color.x, pixel_color.y, pixel_color.z]
-            }).collect::<Vec<f64>>();
+            }).collect::<Vec<f32>>();
 
             bar.inc(1);
 
             data
-        }).collect::<Vec<f64>>();
+        }).collect::<Vec<f32>>();
 
     let sampled = apply_samples(&mut list, SAMPLES_PER_PIXEL, IMAGE_HEIGHT, IMAGE_WIDTH);
 
@@ -129,7 +129,7 @@ fn ray_color(ray: Ray, world: &Box<dyn Hit>, depth: u64, rng: &mut ThreadRng) ->
     }
 
     // 0.1e-325
-    if let Some(rec) = world.hit(&ray, 0.001, f64::INFINITY) {
+    if let Some(rec) = world.hit(&ray, 0.001, f32::INFINITY) {
         if let Some((attenuation, scattered)) = rec.mat.scatter(&ray, &rec) {
             return attenuation * ray_color(scattered, world, depth - 1, rng)
         } else {
@@ -153,11 +153,11 @@ pub fn demo(args: &Args) -> Box<dyn Hit> {
 
     // for a in 0..=22 {
     //     for b in 0..=22 {
-    //         let af = a as f64 - 11.0;
-    //         let bf = b as f64 - 11.0;
+    //         let af = a as f32 - 11.0;
+    //         let bf = b as f32 - 11.0;
 
-    //         let c = rng.gen::<f64>();
-    //         let center = Point3::new(af + 0.9 * rng.gen::<f64>(), 0.2, bf + 0.9 * rng.gen::<f64>());
+    //         let c = rng.gen::<f32>();
+    //         let center = Point3::new(af + 0.9 * rng.gen::<f32>(), 0.2, bf + 0.9 * rng.gen::<f32>());
 
     //         if (center - Point3::new(4.0, 0.2, 0.0)).length() > 0.9 {
     //             if c < 0.45 {

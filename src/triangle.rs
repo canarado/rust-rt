@@ -25,7 +25,7 @@ impl Triangle {
 }
 
 impl Hit for Triangle {
-    fn bounding_box(&self, _time0: f64, _time1: f64) -> Option<AABB> {
+    fn bounding_box(&self, _time0: f32, _time1: f32) -> Option<AABB> {
         Some(AABB::new(
             &Vec3::new(
                 self.v0.x.min(self.v1.x.min(self.v2.x)),
@@ -40,7 +40,7 @@ impl Hit for Triangle {
         ))
     }
 
-    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         let v0v1 = self.v1 - self.v0;
         let v0v2 = self.v2 - self.v0;
 

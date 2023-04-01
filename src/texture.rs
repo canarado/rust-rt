@@ -1,7 +1,7 @@
 use crate::{vec3::Vec3};
 
 pub trait Texture: Sync + Send {
-    fn value(&self, u: f64, v: f64, p: &Vec3) -> Vec3;
+    fn value(&self, u: f32, v: f32, p: &Vec3) -> Vec3;
 }
 
 pub struct ConstantTexture {
@@ -13,7 +13,7 @@ impl ConstantTexture {
 }
 
 impl Texture for ConstantTexture {
-    fn value(&self, u: f64, v: f64, p: &Vec3) -> Vec3 {
+    fn value(&self, u: f32, v: f32, p: &Vec3) -> Vec3 {
         self.color
     }
 }
@@ -28,8 +28,8 @@ impl<T: Texture, Y: Texture> CheckerTexture<T, Y> {
 }
 
 impl<T: Texture, Y: Texture> Texture for CheckerTexture<T, Y> {
-    fn value(&self, u: f64, v: f64, p: &Vec3) -> Vec3 {
-        let sines = f64::sin(10. * p.x) * f64::sin(10. * p.y) * f64::sin(10. * p.z);
+    fn value(&self, u: f32, v: f32, p: &Vec3) -> Vec3 {
+        let sines = f32::sin(10. * p.x) * f32::sin(10. * p.y) * f32::sin(10. * p.z);
         if sines < 0. {
             self.odd.value(u, v, p)
         } else {

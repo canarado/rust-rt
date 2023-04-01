@@ -1,4 +1,4 @@
-use std::f64;
+use std::f32;
 use std::cmp::Ordering;
 use crate::ray::Ray;
 use crate::hittable::{Hit, HitRecord};
@@ -15,8 +15,8 @@ pub struct BVH {
 }
 
 impl BVH {
-    pub fn new(mut hitable: Vec<Box<dyn Hit>>, time0: f64, time1: f64) -> Self {
-        fn box_compare(time0: f64, time1: f64, axis: u8) -> impl FnMut(&Box<dyn Hit>, &Box<dyn Hit>) -> Ordering {
+    pub fn new(mut hitable: Vec<Box<dyn Hit>>, time0: f32, time1: f32) -> Self {
+        fn box_compare(time0: f32, time1: f32, axis: u8) -> impl FnMut(&Box<dyn Hit>, &Box<dyn Hit>) -> Ordering {
             move |a, b| {
                 let a_bbox = a.bounding_box(time0, time1);
                 let b_bbox = b.bounding_box(time0, time1);
@@ -30,8 +30,8 @@ impl BVH {
             }
         }
 
-        fn axis_range(hitable: &Vec<Box<dyn Hit>>, time0: f64, time1: f64, axis: u8) -> f64 {
-            let (min, max) = hitable.iter().fold((f64::MAX, f64::MIN), |(bmin, bmax), hit| {
+        fn axis_range(hitable: &Vec<Box<dyn Hit>>, time0: f32, time1: f32, axis: u8) -> f32 {
+            let (min, max) = hitable.iter().fold((f32::MAX, f32::MIN), |(bmin, bmax), hit| {
                 if let Some(aabb) = hit.bounding_box(time0, time1) {
                     (bmin.min(aabb.minimum[axis]), bmax.max(aabb.maximum[axis]))
                 } else {
@@ -41,7 +41,7 @@ impl BVH {
             max - min
         }
 
-        let mut axis_ranges: Vec<(u8, f64)> = (0..3)
+        let mut axis_ranges: Vec<(u8, f32)> = (0..3)
             .map(|a| (a, axis_range(&hitable, time0, time1, a)))
             .collect();
 
@@ -72,7 +72,7 @@ impl BVH {
 }
 
 impl Hit for BVH {
-    fn hit(&self, ray: &Ray, t_min: f64, mut t_max: f64) -> Option<HitRecord> {
+    fn hit(&self, ray: &Ray, t_min: f32, mut t_max: f32) -> Option<HitRecord> {
         if self.bbox.hit(&ray, t_min, t_max) {
             match &self.tree {
                 BVHNode::Leaf(leaf) => leaf.hit(&ray, t_min, t_max),
@@ -88,7 +88,7 @@ impl Hit for BVH {
         }
     }
 
-    fn bounding_box(&self, _t0: f64, _t1: f64) -> Option<AABB> {
+    fn bounding_box(&self, _t0: f32, _t1: f32) -> Option<AABB> {
         Some(self.bbox)
     }
 }
