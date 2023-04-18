@@ -2,12 +2,13 @@ use std::ops::{Neg, Index, IndexMut, AddAssign, MulAssign, DivAssign ,Add, Sub, 
 use crate::color::Color;
 use rand::rngs::ThreadRng;
 use rand::Rng;
+use serde::{Serialize, Deserialize};
 
 use std::simd::{f64x4, Simd};
 
 use std::iter::Sum;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, Default)]
 pub struct Vec3 {
     pub x: f64,
     pub y: f64,

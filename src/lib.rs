@@ -13,3 +13,4 @@ pub mod bvh;
 pub mod texture;
 pub mod obj;
 pub mod triangle;
+pub mod config;
