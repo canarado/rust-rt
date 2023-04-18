@@ -8,7 +8,8 @@ use raytracer::{
     color::*,
     ray::*,
     hittable::*,
-    sphere::{Sphere, MovingSphere}, camera::{OrthographicCamera}, material::{Lambertian, Metal, Dielectric}, texture::{CheckerTexture, ConstantTexture}, bvh::BVH, obj::{load_obj_and_position, add_obj_to_world}, util::clamp
+    config::Config,
+    sphere::{Sphere, MovingSphere}, camera::create_camera, material::{Lambertian, Metal, Dielectric}, texture::{CheckerTexture, ConstantTexture}, bvh::BVH, obj::{load_obj_and_position, add_obj_to_world}, util::clamp
 };
 
 use rand::Rng;
@@ -17,6 +18,8 @@ use indicatif::ProgressBar;
 use rayon::prelude::*;
 use png;
 use clap::Parser;
+use serde::{Serialize, Deserialize};
+use anyhow::{Result, Context};
 
 #[derive(Parser, Debug)]
 #[command(about = "Simple Toy Raytracer written in Rust", long_about = None)]
@@ -48,9 +51,11 @@ pub struct Args {
     ray_bounces: u8
 }
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let args = Args::parse();
+
+    let cfg: Config = confy::load_path(Path::new("config.ron")).with_context(|| "Failed to load config")?;
 
     rayon::ThreadPoolBuilder::new().num_threads(args.threads.into()).build_global().unwrap();
     
@@ -66,13 +71,7 @@ fn main() {
 
     let world = demo(&args);
 
-    let origin = Point3::new(120., 10.0, 120.);
-    let lookat = Point3::new(0.0, 0.0, 0.0);
-    let vup = Vec3::new(0.0, 1.0, 0.0);
-    let dist_to_focus = 20.0;
-    let aperture = 0.1;
-
-    let camera = OrthographicCamera::new(origin, lookat, vup, 45.0, ASPECT_RATIO, aperture, dist_to_focus, 0.0, 1.0);
+    let camera = create_camera(&cfg, IMAGE_WIDTH, IMAGE_HEIGHT);
 
     let bar = &Box::new(ProgressBar::new(IMAGE_HEIGHT as u64));
     bar.tick();
@@ -120,6 +119,8 @@ fn main() {
     writer.write_image_data(&sampled).unwrap();
 
     eprintln!("Render Time: {:.2?}", start.elapsed());
+
+    Ok(())
 }
 
 fn ray_color(ray: Ray, world: &Box<dyn Hit>, depth: u64, rng: &mut ThreadRng) -> Vec3 {
